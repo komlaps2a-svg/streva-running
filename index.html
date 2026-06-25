@@ -64,12 +64,10 @@
         #map-container { width: 100%; height: 100%; }
         .leaflet-control-attribution, .leaflet-control-zoom { display: none !important; }
         
-        /* Modern Native Color Picker Override */
         input[type="color"] { -webkit-appearance: none; border: none; padding: 0; outline: none; background: transparent; }
         input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
         input[type="color"]::-webkit-color-swatch { border: none; border-radius: 100%; }
 
-        /* Modern Range Slider UI */
         .custom-slider { -webkit-appearance: none; appearance: none; background: transparent; }
         .custom-slider::-webkit-slider-runnable-track { width: 100%; height: 6px; background: rgba(150,150,150,0.3); border-radius: 4px; }
         .custom-slider::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: var(--app-accent); margin-top: -7px; box-shadow: 0 2px 6px rgba(0,0,0,0.5); cursor: pointer; border: 2px solid white; transition: transform 0.1s; }
@@ -85,11 +83,16 @@
 </head>
 <body class="antialiased h-[100dvh] flex flex-col overflow-hidden">
 
-    <!-- HEADER STRICT FLEXBOX -->
     <header class="w-full max-w-md mx-auto flex justify-between items-center p-4 pt-safe shrink-0 z-20">
         <div class="flex items-center gap-3">
-            <div class="w-11 h-11 rounded-[14px] bg-accent flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.3)] transition-colors">
-                <i data-lucide="activity" class="w-6 h-6 text-white"></i>
+            <div class="w-[46px] h-[46px] rounded-[14px] bg-gradient-to-br from-[#fc4c02] via-white to-[#fc4c02] p-[2px] shadow-[0_4px_12px_rgba(0,0,0,0.3)] transition-all">
+                <div class="w-full h-full bg-accent rounded-[12px] flex items-center justify-center overflow-hidden relative">
+                    <svg viewBox="0 0 24 24" class="w-7 h-7 text-white absolute" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 12h4M4 16h3M3 8h2" class="opacity-60" stroke-width="2.5"/>
+                        <circle cx="15.5" cy="5.5" r="1.5" fill="currentColor" stroke="none" />
+                        <path d="M15.5 7.5l-2 4.5-3 1 M13.5 12l1 5 3 2 M10.5 13l-2 4 1 3 M15.5 7.5h3l2 2 M15.5 7.5l-3-2-2 3" stroke-width="2"/>
+                    </svg>
+                </div>
             </div>
             <div class="flex flex-col justify-center">
                 <h1 class="font-black text-xl uppercase tracking-tight leading-none drop-shadow-sm">STREVA</h1>
@@ -101,10 +104,7 @@
         </button>
     </header>
 
-    <!-- DASHBOARD WORKSPACE -->
     <main class="w-full max-w-md mx-auto flex flex-col gap-4 px-4 pb-4 flex-1 overflow-y-auto z-10 relative">
-        
-        <!-- Peta Interaktif -->
         <div id="map-wrapper" class="shadow-xl border border-[rgba(255,255,255,0.1)]">
             <div id="map-container"></div>
             <button id="btn-close-map" class="absolute top-16 right-4 z-[10000] w-12 h-12 rounded-full bg-black/90 border border-white/20 hidden items-center justify-center text-white active:scale-95 shadow-2xl backdrop-blur-md">
@@ -139,23 +139,20 @@
         </div>
     </main>
 
-    <!-- FOOTER CONTROLS -->
     <footer class="w-full max-w-md mx-auto p-4 shrink-0 z-30 pb-safe relative">
         <div class="panel-bg rounded-[40px] p-3 flex items-center justify-between px-6 shadow-2xl border border-[rgba(255,255,255,0.1)] relative z-30">
             <div class="w-14"></div> 
-            
             <button id="btn-toggle" class="w-20 h-20 bg-accent rounded-full flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.4)] transition-all active:scale-90 relative z-[50]">
                 <i id="icon-start" data-lucide="play" class="w-10 h-10 text-white fill-current ml-2"></i>
                 <i id="icon-pause" data-lucide="pause" class="w-10 h-10 text-white fill-current hidden"></i>
             </button>
-            
             <button id="btn-finish" class="w-14 h-14 rounded-full bg-red-500/10 text-red-500 border border-red-500/30 flex items-center justify-center transition-all opacity-40 pointer-events-none active:scale-95 relative z-[50]">
                 <i data-lucide="square" class="w-6 h-6 fill-current"></i>
             </button>
         </div>
     </footer>
 
-    <!-- ================= MODALS (Z-INDEX 99999) ================= -->
+    <!-- MODAL SETTINGS -->
     <div id="modal-settings" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[99999] hidden items-center justify-center p-4">
         <div class="w-full max-w-md bg-[var(--app-bg)] rounded-[32px] p-6 max-h-[90dvh] overflow-y-auto modal-pop shadow-2xl border border-[rgba(255,255,255,0.1)]" id="settings-content">
             <div class="flex justify-between items-center mb-6">
@@ -164,33 +161,26 @@
             </div>
             
             <div class="space-y-5">
-                
-                <!-- CUSTOM UI/UX TEMA APLIKASI -->
+                <!-- UI THEME -->
                 <div class="p-5 rounded-[24px] panel-bg shadow-sm">
                     <div class="flex items-center gap-2 mb-4 opacity-80">
                         <i data-lucide="palette" class="w-4 h-4"></i>
                         <span class="text-[11px] font-bold uppercase tracking-widest">Estetika Aplikasi</span>
                     </div>
 
-                    <!-- Segmented Mode UI -->
                     <div class="flex bg-[rgba(150,150,150,0.1)] rounded-xl p-1 mb-5 border border-[rgba(255,255,255,0.05)]">
                         <button id="btn-ui-dark" class="flex-1 py-2.5 rounded-lg tab-active text-xs font-bold transition-all">Gelap</button>
                         <button id="btn-ui-light" class="flex-1 py-2.5 rounded-lg tab-inactive text-xs font-bold transition-all">Terang</button>
                     </div>
 
-                    <!-- Preset Aksen Warna -->
                     <div class="mb-5">
                         <div class="flex justify-between items-center mb-2">
                             <span class="text-[10px] font-semibold opacity-70 uppercase block">Warna Aksen UI</span>
                         </div>
                         <div class="flex gap-4 items-center">
-                            <!-- Preset Strava Orange -->
                             <button class="w-8 h-8 rounded-full bg-[#fc4c02] shadow-[0_2px_10px_rgba(252,76,2,0.4)] border-2 border-[var(--app-bg)] focus:outline-none transition-transform hover:scale-110" onclick="window.setThemePreset('#fc4c02')"></button>
-                            <!-- Preset Neon Green -->
                             <button class="w-8 h-8 rounded-full bg-[#10b981] shadow-[0_2px_10px_rgba(16,185,129,0.4)] border-2 border-[var(--app-bg)] focus:outline-none transition-transform hover:scale-110" onclick="window.setThemePreset('#10b981')"></button>
-                            <!-- Preset Blue -->
                             <button class="w-8 h-8 rounded-full bg-[#3b82f6] shadow-[0_2px_10px_rgba(59,130,246,0.4)] border-2 border-[var(--app-bg)] focus:outline-none transition-transform hover:scale-110" onclick="window.setThemePreset('#3b82f6')"></button>
-                            <!-- Custom Color Picker -->
                             <div class="w-8 h-8 rounded-full overflow-hidden relative shadow-sm border border-[rgba(255,255,255,0.3)] transition-transform hover:scale-110 ml-2">
                                 <i data-lucide="plus" class="absolute inset-0 m-auto w-4 h-4 opacity-50 pointer-events-none"></i>
                                 <input type="color" id="theme-accent" value="#fc4c02" class="absolute -top-2 -left-2 w-16 h-16 cursor-pointer opacity-0">
@@ -198,7 +188,6 @@
                         </div>
                     </div>
 
-                    <!-- Slider Transparansi -->
                     <div>
                         <div class="flex justify-between items-center mb-2">
                             <span class="text-[10px] font-semibold opacity-70 uppercase">Ketebalan Panel</span>
@@ -208,7 +197,7 @@
                     </div>
                 </div>
 
-                <!-- TEMA GAMBAR EKSPOR -->
+                <!-- EXPORT THEME -->
                 <div class="p-5 rounded-[24px] panel-bg shadow-sm">
                     <div class="flex items-center gap-2 mb-4 opacity-80">
                         <i data-lucide="image" class="w-4 h-4"></i>
@@ -220,7 +209,7 @@
                     </div>
                 </div>
 
-                <!-- SENSOR & HARDWARE -->
+                <!-- SENSOR -->
                 <div class="p-5 rounded-[24px] panel-bg shadow-sm">
                     <div class="flex items-center gap-2 mb-4 opacity-80">
                         <i data-lucide="zap" class="w-4 h-4"></i>
@@ -233,21 +222,37 @@
                     <input type="range" id="input-sens" min="0.5" max="4.0" step="0.1" value="1.5" class="w-full custom-slider">
                 </div>
 
-                <!-- INSTALASI WIDGET -->
                 <button id="btn-install" class="w-full py-4 rounded-[16px] bg-accent text-white font-black text-sm uppercase tracking-widest hidden items-center justify-center gap-2 shadow-lg active:scale-95 transition-transform">
                     <i data-lucide="layout-grid" class="w-5 h-5"></i> Tambah Ke Layar Utama
                 </button>
 
                 <!-- RIWAYAT -->
                 <div>
-                    <span class="text-[11px] font-bold opacity-50 uppercase tracking-widest block mb-3 pl-1">Riwayat Tracking</span>
+                    <div class="flex justify-between items-center mb-3 px-1">
+                        <span class="text-[11px] font-bold opacity-50 uppercase tracking-widest">Riwayat Tracking</span>
+                    </div>
                     <div id="history-container" class="space-y-3 max-h-[300px] overflow-y-auto pr-1 pb-4"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL: EXPORT & SUMMARY -->
+    <!-- MODAL: CUSTOM CONFIRM DELETE (VERIFIKASI 2 LANGKAH) -->
+    <div id="modal-confirm-delete" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-[999999] hidden items-center justify-center p-4">
+        <div class="w-full max-w-sm flex flex-col gap-4 modal-pop bg-[#18181b] border border-white/10 p-6 rounded-[32px] text-center shadow-2xl relative">
+            <div class="w-16 h-16 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center mx-auto mb-2 border border-red-500/30">
+                <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-xl text-white font-black uppercase tracking-wider">Hapus Riwayat?</h3>
+            <p class="text-sm text-gray-400 font-medium">Tindakan ini permanen dan data tidak dapat dikembalikan.</p>
+            <div class="flex gap-3 mt-4 w-full">
+                <button id="btn-cancel-delete" class="flex-1 py-4 rounded-xl bg-white/10 text-white font-bold text-xs uppercase tracking-widest active:scale-95 transition-transform border border-white/10">Batal</button>
+                <button id="btn-confirm-delete" class="flex-1 py-4 rounded-xl bg-red-500 text-white font-black text-xs uppercase tracking-widest active:scale-95 transition-transform shadow-[0_4px_15px_rgba(239,68,68,0.4)]">Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: SUMMARY -->
     <div id="modal-summary" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-[99999] hidden items-center justify-center p-4">
         <div class="w-full max-w-sm flex flex-col gap-5 modal-pop" id="summary-content">
             <div class="flex justify-between items-center px-2">
@@ -282,22 +287,28 @@
             btnDl: document.getElementById('btn-download'), cExp: document.getElementById('export-canvas'), hCont: document.getElementById('history-container'),
             inpSens: document.getElementById('input-sens'), lblSens: document.getElementById('lbl-sens'), btnInstall: document.getElementById('btn-install'),
             
-            // UI Custom Segmented Controls
             btnUiDark: document.getElementById('btn-ui-dark'), btnUiLight: document.getElementById('btn-ui-light'),
             btnExpLight: document.getElementById('btn-export-light'), btnExpDark: document.getElementById('btn-export-dark'),
             inOpacity: document.getElementById('theme-opacity'), lblOpacity: document.getElementById('lbl-opacity'),
-            inAccent: document.getElementById('theme-accent')
+            inAccent: document.getElementById('theme-accent'),
+            
+            // Delete Modal Elements
+            mDel: document.getElementById('modal-confirm-delete'),
+            btnConfirmDel: document.getElementById('btn-confirm-delete'),
+            btnCancelDel: document.getElementById('btn-cancel-delete')
         };
 
         let map, polyline, currentMarker;
+        let pendingDeleteId = null;
 
         // Klik Area Luar untuk Menutup Modal
         window.addEventListener('click', (e) => {
             if (e.target === DOM.mSet) DOM.mSet.classList.replace('flex', 'hidden');
             if (e.target === DOM.mSum) DOM.mSum.classList.replace('flex', 'hidden');
+            if (e.target === DOM.mDel) { DOM.mDel.classList.replace('flex', 'hidden'); pendingDeleteId = null; }
         });
 
-        // ================= MESIN TEMA (UI POLISH) =================
+        // ================= MESIN TEMA =================
         function hexToRgbStr(hex) {
             let r = 0, g = 0, b = 0;
             if (hex.length === 7) { r = parseInt(hex.slice(1,3), 16); g = parseInt(hex.slice(3,5), 16); b = parseInt(hex.slice(5,7), 16); }
@@ -306,22 +317,17 @@
 
         function applyTheme(isDark, accent, opacity) {
             const root = document.documentElement.style;
-            
-            // Hardcode logic light/dark untuk kemudahan klik
             const bg = isDark ? '#09090b' : '#f8fafc';
             const text = isDark ? '#ffffff' : '#09090b';
             const panel = isDark ? '#18181b' : '#ffffff';
 
-            root.setProperty('--app-bg', bg); 
-            root.setProperty('--app-text', text); 
-            root.setProperty('--app-accent', accent); 
-            root.setProperty('--app-panel-rgb', hexToRgbStr(panel));
+            root.setProperty('--app-bg', bg); root.setProperty('--app-text', text); 
+            root.setProperty('--app-accent', accent); root.setProperty('--app-panel-rgb', hexToRgbStr(panel));
             root.setProperty('--app-panel-opacity', opacity);
             
             document.getElementById('meta-theme-color').content = accent;
             if(polyline) polyline.setStyle({ color: accent });
 
-            // Sinkronisasi Switch UI
             if(isDark) {
                 DOM.btnUiDark.className = "flex-1 py-2.5 rounded-lg tab-active text-xs font-bold transition-all";
                 DOM.btnUiLight.className = "flex-1 py-2.5 rounded-lg tab-inactive text-xs font-bold transition-all";
@@ -342,16 +348,14 @@
         }
 
         window.setThemePreset = (hexColor) => {
-            DOM.inAccent.value = hexColor;
-            DOM.inAccent.dispatchEvent(new Event('input'));
+            DOM.inAccent.value = hexColor; DOM.inAccent.dispatchEvent(new Event('input'));
         };
 
         function initTheme() {
             const def = { isDark: true, accent: '#fc4c02', opacity: 0.85, isExportDark: false };
             const cache = JSON.parse(localStorage.getItem('STREVA_UI_CONFIG')) || def;
             
-            DOM.inAccent.value = cache.accent;
-            DOM.inOpacity.value = cache.opacity;
+            DOM.inAccent.value = cache.accent; DOM.inOpacity.value = cache.opacity;
             DOM.lblOpacity.innerText = Math.round(cache.opacity * 100) + '%';
             
             applyTheme(cache.isDark, cache.accent, cache.opacity);
@@ -364,20 +368,15 @@
                 return merged;
             };
 
-            // Bindings UI App Theme
             DOM.btnUiDark.onclick = () => { const m = saveConfig({ isDark: true }); applyTheme(m.isDark, m.accent, m.opacity); };
             DOM.btnUiLight.onclick = () => { const m = saveConfig({ isDark: false }); applyTheme(m.isDark, m.accent, m.opacity); };
             
-            // Bindings Accent & Opacity
-            DOM.inAccent.addEventListener('input', (e) => { 
-                const m = saveConfig({ accent: e.target.value }); applyTheme(m.isDark, m.accent, m.opacity); 
-            });
+            DOM.inAccent.addEventListener('input', (e) => { const m = saveConfig({ accent: e.target.value }); applyTheme(m.isDark, m.accent, m.opacity); });
             DOM.inOpacity.addEventListener('input', (e) => { 
                 DOM.lblOpacity.innerText = Math.round(e.target.value * 100) + '%';
                 const m = saveConfig({ opacity: parseFloat(e.target.value) }); applyTheme(m.isDark, m.accent, m.opacity); 
             });
 
-            // Bindings Export Theme
             DOM.btnExpLight.onclick = () => { saveConfig({ isExportDark: false }); applyExportThemeUI(false); };
             DOM.btnExpDark.onclick = () => { saveConfig({ isExportDark: true }); applyExportThemeUI(true); };
         }
@@ -550,12 +549,18 @@
                 return;
             }
             DOM.hCont.innerHTML = hist.map(item => `
-                <div onclick="reopenHistory(${item.id})" class="p-3 rounded-xl panel-bg border border-[rgba(255,255,255,0.1)] flex flex-col gap-2 cursor-pointer hover:scale-[0.98] transition-transform shadow-sm">
+                <div onclick="reopenHistory(${item.id})" class="p-3 rounded-xl panel-bg border border-[rgba(255,255,255,0.05)] flex flex-col gap-2 cursor-pointer hover:scale-[0.98] transition-transform shadow-sm relative group overflow-hidden">
                     <div class="flex justify-between items-center">
                         <span class="text-[10px] text-accent font-black uppercase tracking-wider">${item.date}</span>
-                        <i data-lucide="download" class="w-3.5 h-3.5 opacity-60"></i>
+                        <div class="flex items-center gap-2">
+                            <!-- BUGFIX: Event Bubbling distop, intervensi Z-Index -->
+                            <button onclick="promptDeleteHistory(event, ${item.id})" class="text-red-500 opacity-60 hover:opacity-100 hover:bg-red-500/20 p-1.5 rounded-md transition-all active:scale-90 relative z-20">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5 pointer-events-none"></i>
+                            </button>
+                            <i data-lucide="download" class="w-4 h-4 opacity-60 ml-1"></i>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-4 text-center divide-x divide-white/20 opacity-90">
+                    <div class="grid grid-cols-4 text-center divide-x divide-white/20 opacity-90 border-t border-white/5 pt-2">
                         <div><span class="text-xs font-black block">${item.distance}</span><span class="text-[8px] opacity-60 uppercase">KM</span></div>
                         <div><span class="text-xs font-black block">${item.steps}</span><span class="text-[8px] opacity-60 uppercase">Step</span></div>
                         <div><span class="text-xs font-black block">${item.pace}</span><span class="text-[8px] opacity-60 uppercase">Pace</span></div>
@@ -577,7 +582,29 @@
             }
         };
 
-        // KANVAS RENDERER (DENGAN TEMA EKSPOR LIGHT/DARK BINDING)
+        // --- MANAJEMEN PENGHAPUSAN RIWAYAT (MODAL CUSTOM) ---
+        window.promptDeleteHistory = (e, id) => {
+            e.stopPropagation(); // Stop parent div click event
+            pendingDeleteId = id;
+            DOM.mDel.classList.replace('hidden', 'flex');
+        };
+
+        DOM.btnCancelDel.onclick = () => {
+            pendingDeleteId = null;
+            DOM.mDel.classList.replace('flex', 'hidden');
+        };
+
+        DOM.btnConfirmDel.onclick = () => {
+            if(!pendingDeleteId) return;
+            let hist = JSON.parse(localStorage.getItem('STREVA_HIST') || '[]');
+            hist = hist.filter(h => h.id !== pendingDeleteId);
+            localStorage.setItem('STREVA_HIST', JSON.stringify(hist));
+            renderHistoryUI();
+            pendingDeleteId = null;
+            DOM.mDel.classList.replace('flex', 'hidden');
+        };
+
+        // KANVAS EXPORTER
         function renderCanvasImage(cData, dStr, pStr, tStr) {
             const cvs = DOM.cExp; const sW = 1080; const sH = 1350; 
             cvs.width = sW; cvs.height = sH; const ctx = cvs.getContext('2d');
@@ -624,7 +651,7 @@
             }
 
             ctx.fillStyle = isDark ? '#ffffff' : '#000000'; 
-            ctx.font = '900 45px Inter, sans-serif'; ctx.fillText('STREVA', sW/2, 1300);
+            ctx.font = '900 45px Inter, sans-serif'; ctx.fillText('STRAVA', sW/2, 1300);
         }
 
         // --- BOOTSTRAP ---
