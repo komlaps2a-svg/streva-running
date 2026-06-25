@@ -1,7 +1,7 @@
 {
   "name": "STREVA RUNNING",
   "short_name": "STREVA",
-  "description": "Production-Grade Tracker App",
+  "description": "Aplikasi Pelacak Lari PWA Offline-First",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#09090b",
@@ -9,8 +9,8 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fc4c02' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='22 12 18 12 15 21 9 3 6 12 2 12'/%3E%3C/svg%3E",
-      "sizes": "512x512",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='24' height='24' rx='4' fill='%23fc4c02' stroke='none'/%3E%3Cpath d='M4 12h4M6 16h3M5 8h2' opacity='0.6' stroke-width='2'/%3E%3Ccircle cx='15.5' cy='6.5' r='1.5' fill='%23ffffff' stroke='none'/%3E%3Cpath d='M15.5 8.5l-2 4.5-3 1 M13.5 13l1 5 3 2 M10.5 14l-2 4 1 3 M15.5 8.5h3l2 2 M15.5 8.5l-3-2-2 3' stroke-width='1.5'/%3E%3C/svg%3E",
+      "sizes": "192x192 512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
