@@ -1,5 +1,5 @@
-const CACHE_NAME = 'strava-clone-v2';
-const CORE_ASSETS = [
+const CACHE_NAME = 'streva-prod-v2';
+const ASSETS = [
     './',
     './index.html',
     './manifest.json',
@@ -9,42 +9,25 @@ const CORE_ASSETS = [
     'https://unpkg.com/lucide@latest'
 ];
 
-self.addEventListener('install', (event) => {
+self.addEventListener('install', (e) => {
     self.skipWaiting();
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS))
-    );
+    e.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll(ASSETS)));
 });
 
-self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys().then((keys) => {
-            return Promise.all(
-                keys.map((key) => {
-                    if (key !== CACHE_NAME) return caches.delete(key);
-                })
-            );
-        })
+self.addEventListener('activate', (e) => {
+    e.waitUntil(
+        caches.keys().then((keys) => Promise.all(keys.map(k => { if (k !== CACHE_NAME) return caches.delete(k); })))
     );
     self.clients.claim();
 });
 
-// Cache First Strategy untuk Aset Statis, Network Fallback
-self.addEventListener('fetch', (event) => {
-    if (event.request.method !== 'GET') return;
-    
-    event.respondWith(
-        caches.match(event.request).then((cachedResponse) => {
-            if (cachedResponse) return cachedResponse;
-            return fetch(event.request).then((response) => {
-                // Jangan cache request ke domain luar selain API yang didefinisikan
-                if (!event.request.url.startsWith(self.location.origin)) {
-                    return response;
-                }
-                return caches.open(CACHE_NAME).then((cache) => {
-                    cache.put(event.request, response.clone());
-                    return response;
-                });
+self.addEventListener('fetch', (e) => {
+    if (e.request.method !== 'GET') return;
+    e.respondWith(
+        caches.match(e.request).then((res) => {
+            return res || fetch(e.request).then((netRes) => {
+                if (e.request.url.includes('basemaps.cartocdn.com')) return netRes; // Jangan cache tiles map dynamis
+                return caches.open(CACHE_NAME).then((c) => { c.put(e.request, netRes.clone()); return netRes; });
             });
         })
     );
