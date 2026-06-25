@@ -152,6 +152,7 @@
         </div>
     </footer>
 
+    <!-- MODAL SETTINGS -->
     <div id="modal-settings" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[99999] hidden items-center justify-center p-4">
         <div class="w-full max-w-md bg-[var(--app-bg)] rounded-[32px] p-6 max-h-[90dvh] overflow-y-auto modal-pop shadow-2xl border border-[rgba(255,255,255,0.1)]" id="settings-content">
             <div class="flex justify-between items-center mb-6">
@@ -160,6 +161,7 @@
             </div>
             
             <div class="space-y-5">
+                <!-- UI THEME -->
                 <div class="p-5 rounded-[24px] panel-bg shadow-sm">
                     <div class="flex items-center gap-2 mb-4 opacity-80">
                         <i data-lucide="palette" class="w-4 h-4"></i>
@@ -195,6 +197,7 @@
                     </div>
                 </div>
 
+                <!-- EXPORT THEME -->
                 <div class="p-5 rounded-[24px] panel-bg shadow-sm">
                     <div class="flex items-center gap-2 mb-4 opacity-80">
                         <i data-lucide="image" class="w-4 h-4"></i>
@@ -206,6 +209,7 @@
                     </div>
                 </div>
 
+                <!-- SENSOR -->
                 <div class="p-5 rounded-[24px] panel-bg shadow-sm">
                     <div class="flex items-center gap-2 mb-4 opacity-80">
                         <i data-lucide="zap" class="w-4 h-4"></i>
@@ -222,6 +226,7 @@
                     <i data-lucide="layout-grid" class="w-5 h-5"></i> Tambah Ke Layar Utama
                 </button>
 
+                <!-- RIWAYAT -->
                 <div>
                     <div class="flex justify-between items-center mb-3 px-1">
                         <span class="text-[11px] font-bold opacity-50 uppercase tracking-widest">Riwayat Tracking</span>
@@ -233,6 +238,7 @@
         </div>
     </div>
 
+    <!-- MODAL CONFIRM DELETE -->
     <div id="modal-confirm-delete" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-[999999] hidden items-center justify-center p-4">
         <div class="w-full max-w-sm flex flex-col gap-4 modal-pop bg-[#18181b] border border-white/10 p-6 rounded-[32px] text-center shadow-2xl relative">
             <div class="w-16 h-16 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center mx-auto mb-2 border border-red-500/30">
@@ -247,6 +253,7 @@
         </div>
     </div>
 
+    <!-- MODAL SUMMARY -->
     <div id="modal-summary" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-[99999] hidden items-center justify-center p-4">
         <div class="w-full max-w-sm flex flex-col gap-5 modal-pop" id="summary-content">
             <div class="flex justify-between items-center px-2">
@@ -266,8 +273,7 @@
         const CONFIG = { THRESHOLD: 2.5, COOLDOWN_MS: 350, MIN_ACCURACY: 45 };
         const State = {
             isActive: false, isPaused: false, elapsed: 0, steps: 0, distance: 0,
-            gravity: 9.81, lastStepMs: 0, coords: [], watchId: null, timerId: null, deferredPrompt: null,
-            currentGpsSpeed: null
+            gravity: 9.81, lastStepMs: 0, coords: [], watchId: null, timerId: null, deferredPrompt: null
         };
 
         const DOM = {
@@ -406,8 +412,6 @@
                     if (pos.coords.accuracy > CONFIG.MIN_ACCURACY) return;
                     DOM.gpsInd.innerText = "GPS AKTIF"; DOM.gpsInd.className = "text-[10px] text-green-500 font-bold uppercase tracking-wider mt-0.5";
                     
-                    State.currentGpsSpeed = pos.coords.speed;
-                    
                     const pt = [pos.coords.latitude, pos.coords.longitude];
                     
                     if (State.coords.length > 0) {
@@ -435,34 +439,24 @@
         }
 
         function formatTimeExport(s) {
-            const m = Math.floor(s / 60); const sec = s % 60;
+            const m = Math.floor(s / 60); const sec = Math.floor(s % 60);
             return `${m}m ${sec}d`;
         }
 
         function calculatePace() {
-            if (State.currentGpsSpeed && State.currentGpsSpeed > 0.2) {
-                const paceMinKm = 60 / (State.currentGpsSpeed * 3.6);
-                if (paceMinKm < 60) {
-                    const m = Math.floor(paceMinKm); 
-                    const s = Math.floor((paceMinKm - m) * 60);
-                    DOM.vPace.innerText = `${m}:${s.toString().padStart(2, '0')}`;
-                    return;
-                }
-            }
-            
-            if (State.distance < 0.01) { DOM.vPace.innerText = "--:--"; return; }
+            if (State.distance < 0.005) { DOM.vPace.innerText = "--:--"; return; }
             const paceRaw = State.elapsed / State.distance;
-            if (paceRaw > 3599) { DOM.vPace.innerText = "--:--"; return; }
             const m = Math.floor(paceRaw / 60), s = Math.floor(paceRaw % 60);
-            DOM.vPace.innerText = `${m}:${s.toString().padStart(2, '0')}`;
+            DOM.vPace.innerText = m > 60 ? "--:--" : `${m}:${s.toString().padStart(2, '0')}`;
         }
         
-        function getAveragePace() {
-            if (State.distance < 0.01) return "--:--";
+        // FUNGSI INJEKSI ABSOLUT UNTUK MENGAMANKAN PACE RATA-RATA SAAT WAKTU STOP
+        function getFinalAveragePace() {
+            if (State.distance < 0.005) return "--:--";
             const paceRaw = State.elapsed / State.distance;
-            if (paceRaw > 3599) return "--:--";
-            const m = Math.floor(paceRaw / 60), s = Math.floor(paceRaw % 60);
-            return `${m}:${s.toString().padStart(2, '0')}`;
+            const m = Math.floor(paceRaw / 60);
+            const s = Math.floor(paceRaw % 60);
+            return m > 60 ? "--:--" : `${m}:${s.toString().padStart(2, '0')}`;
         }
 
         function handleMotion(e) {
@@ -564,13 +558,15 @@
             window.removeEventListener('devicemotion', handleMotion, true);
             if(State.watchId) navigator.geolocation.clearWatch(State.watchId);
             
-            const finalAveragePace = getAveragePace();
-            saveHistoryData(finalAveragePace);
+            // Kalkulasi Average Pace Mutlak di detik terakhir
+            const finalAvgPace = getFinalAveragePace();
             
-            let paceUI = finalAveragePace;
-            if(paceUI !== "--:--") paceUI += " /km";
+            saveHistoryData(finalAvgPace);
+            
+            let paceForExport = finalAvgPace;
+            if(paceForExport !== "--:--") paceForExport += " /km";
 
-            renderCanvasImage(State.coords, State.distance.toFixed(2), paceUI, formatTimeExport(State.elapsed));
+            renderCanvasImage(State.coords, State.distance.toFixed(2), paceForExport, formatTimeExport(State.elapsed));
             DOM.mSum.classList.replace('hidden', 'flex');
             
             State.isActive = false; persistSession();
