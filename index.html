@@ -152,7 +152,6 @@
         </div>
     </footer>
 
-    <!-- MODAL SETTINGS -->
     <div id="modal-settings" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[99999] hidden items-center justify-center p-4">
         <div class="w-full max-w-md bg-[var(--app-bg)] rounded-[32px] p-6 max-h-[90dvh] overflow-y-auto modal-pop shadow-2xl border border-[rgba(255,255,255,0.1)]" id="settings-content">
             <div class="flex justify-between items-center mb-6">
@@ -161,7 +160,6 @@
             </div>
             
             <div class="space-y-5">
-                <!-- UI THEME -->
                 <div class="p-5 rounded-[24px] panel-bg shadow-sm">
                     <div class="flex items-center gap-2 mb-4 opacity-80">
                         <i data-lucide="palette" class="w-4 h-4"></i>
@@ -197,7 +195,6 @@
                     </div>
                 </div>
 
-                <!-- EXPORT THEME -->
                 <div class="p-5 rounded-[24px] panel-bg shadow-sm">
                     <div class="flex items-center gap-2 mb-4 opacity-80">
                         <i data-lucide="image" class="w-4 h-4"></i>
@@ -209,7 +206,6 @@
                     </div>
                 </div>
 
-                <!-- SENSOR -->
                 <div class="p-5 rounded-[24px] panel-bg shadow-sm">
                     <div class="flex items-center gap-2 mb-4 opacity-80">
                         <i data-lucide="zap" class="w-4 h-4"></i>
@@ -217,19 +213,19 @@
                     </div>
                     <div class="flex justify-between mb-2">
                         <span class="text-[10px] font-semibold opacity-70 uppercase">Sensitivitas Pedometer</span>
-                        <span id="lbl-sens" class="text-[10px] font-black font-mono text-accent transition-colors">1.5</span>
+                        <span id="lbl-sens" class="text-[10px] font-black font-mono text-accent transition-colors">2.5</span>
                     </div>
-                    <input type="range" id="input-sens" min="0.5" max="4.0" step="0.1" value="1.5" class="w-full custom-slider">
+                    <input type="range" id="input-sens" min="1.0" max="6.0" step="0.1" value="2.5" class="w-full custom-slider">
                 </div>
 
                 <button id="btn-install" class="w-full py-4 rounded-[16px] bg-accent text-white font-black text-sm uppercase tracking-widest hidden items-center justify-center gap-2 shadow-lg active:scale-95 transition-transform">
                     <i data-lucide="layout-grid" class="w-5 h-5"></i> Tambah Ke Layar Utama
                 </button>
 
-                <!-- RIWAYAT -->
                 <div>
                     <div class="flex justify-between items-center mb-3 px-1">
                         <span class="text-[11px] font-bold opacity-50 uppercase tracking-widest">Riwayat Tracking</span>
+                        <button id="btn-clear-history" class="text-[9px] font-bold text-red-500 uppercase px-2 py-1.5 rounded-lg bg-red-500/10 active:scale-95 transition-transform border border-red-500/20">Hapus Semua</button>
                     </div>
                     <div id="history-container" class="space-y-3 max-h-[300px] overflow-y-auto pr-1 pb-4"></div>
                 </div>
@@ -237,7 +233,6 @@
         </div>
     </div>
 
-    <!-- MODAL: CUSTOM CONFIRM DELETE (VERIFIKASI 2 LANGKAH) -->
     <div id="modal-confirm-delete" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-[999999] hidden items-center justify-center p-4">
         <div class="w-full max-w-sm flex flex-col gap-4 modal-pop bg-[#18181b] border border-white/10 p-6 rounded-[32px] text-center shadow-2xl relative">
             <div class="w-16 h-16 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center mx-auto mb-2 border border-red-500/30">
@@ -252,7 +247,6 @@
         </div>
     </div>
 
-    <!-- MODAL: SUMMARY -->
     <div id="modal-summary" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-[99999] hidden items-center justify-center p-4">
         <div class="w-full max-w-sm flex flex-col gap-5 modal-pop" id="summary-content">
             <div class="flex justify-between items-center px-2">
@@ -269,10 +263,11 @@
     </div>
 
     <script>
-        const CONFIG = { THRESHOLD: 1.5, COOLDOWN_MS: 300, MIN_ACCURACY: 45 };
+        const CONFIG = { THRESHOLD: 2.5, COOLDOWN_MS: 350, MIN_ACCURACY: 45 };
         const State = {
             isActive: false, isPaused: false, elapsed: 0, steps: 0, distance: 0,
-            gravity: 9.81, lastStepMs: 0, coords: [], watchId: null, timerId: null, deferredPrompt: null
+            gravity: 9.81, lastStepMs: 0, coords: [], watchId: null, timerId: null, deferredPrompt: null,
+            currentGpsSpeed: null
         };
 
         const DOM = {
@@ -292,7 +287,6 @@
             inOpacity: document.getElementById('theme-opacity'), lblOpacity: document.getElementById('lbl-opacity'),
             inAccent: document.getElementById('theme-accent'),
             
-            // Delete Modal Elements
             mDel: document.getElementById('modal-confirm-delete'),
             btnConfirmDel: document.getElementById('btn-confirm-delete'),
             btnCancelDel: document.getElementById('btn-cancel-delete')
@@ -301,14 +295,12 @@
         let map, polyline, currentMarker;
         let pendingDeleteId = null;
 
-        // Klik Area Luar untuk Menutup Modal
         window.addEventListener('click', (e) => {
             if (e.target === DOM.mSet) DOM.mSet.classList.replace('flex', 'hidden');
             if (e.target === DOM.mSum) DOM.mSum.classList.replace('flex', 'hidden');
             if (e.target === DOM.mDel) { DOM.mDel.classList.replace('flex', 'hidden'); pendingDeleteId = null; }
         });
 
-        // ================= MESIN TEMA =================
         function hexToRgbStr(hex) {
             let r = 0, g = 0, b = 0;
             if (hex.length === 7) { r = parseInt(hex.slice(1,3), 16); g = parseInt(hex.slice(3,5), 16); b = parseInt(hex.slice(5,7), 16); }
@@ -381,7 +373,6 @@
             DOM.btnExpDark.onclick = () => { saveConfig({ isExportDark: true }); applyExportThemeUI(true); };
         }
 
-        // ================= MESIN PETA =================
         function initMap() {
             map = L.map('map-container', { zoomControl: false, dragging: true }).setView([-2.5489, 118.0149], 5);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
@@ -414,6 +405,9 @@
                 (pos) => {
                     if (pos.coords.accuracy > CONFIG.MIN_ACCURACY) return;
                     DOM.gpsInd.innerText = "GPS AKTIF"; DOM.gpsInd.className = "text-[10px] text-green-500 font-bold uppercase tracking-wider mt-0.5";
+                    
+                    State.currentGpsSpeed = pos.coords.speed;
+                    
                     const pt = [pos.coords.latitude, pos.coords.longitude];
                     
                     if (State.coords.length > 0) {
@@ -436,18 +430,39 @@
             return 12742 * Math.asin(Math.sqrt(a));
         }
 
-        function formatTimeStr(s) { return (s-(s%=60))/60+(9<s?':':':0')+s; }
-        
+        function formatTimeStr(s) { 
+            return (s-(s%=60))/60+(9<s?':':':0')+s; 
+        }
+
         function formatTimeExport(s) {
-            const m = Math.floor(s / 60); const sec = Math.floor(s % 60);
+            const m = Math.floor(s / 60); const sec = s % 60;
             return `${m}m ${sec}d`;
         }
 
         function calculatePace() {
-            if (State.distance < 0.005) { DOM.vPace.innerText = "--:--"; return; }
+            if (State.currentGpsSpeed && State.currentGpsSpeed > 0.2) {
+                const paceMinKm = 60 / (State.currentGpsSpeed * 3.6);
+                if (paceMinKm < 60) {
+                    const m = Math.floor(paceMinKm); 
+                    const s = Math.floor((paceMinKm - m) * 60);
+                    DOM.vPace.innerText = `${m}:${s.toString().padStart(2, '0')}`;
+                    return;
+                }
+            }
+            
+            if (State.distance < 0.01) { DOM.vPace.innerText = "--:--"; return; }
             const paceRaw = State.elapsed / State.distance;
+            if (paceRaw > 3599) { DOM.vPace.innerText = "--:--"; return; }
             const m = Math.floor(paceRaw / 60), s = Math.floor(paceRaw % 60);
-            DOM.vPace.innerText = m > 60 ? "--:--" : `${m}:${s.toString().padStart(2, '0')}`;
+            DOM.vPace.innerText = `${m}:${s.toString().padStart(2, '0')}`;
+        }
+        
+        function getAveragePace() {
+            if (State.distance < 0.01) return "--:--";
+            const paceRaw = State.elapsed / State.distance;
+            if (paceRaw > 3599) return "--:--";
+            const m = Math.floor(paceRaw / 60), s = Math.floor(paceRaw % 60);
+            return `${m}:${s.toString().padStart(2, '0')}`;
         }
 
         function handleMotion(e) {
@@ -457,72 +472,105 @@
             State.gravity = (0.9 * State.gravity) + (0.1 * mag);
             const linear = Math.abs(mag - State.gravity);
             const ms = Date.now();
+            
             if (linear > CONFIG.THRESHOLD && (ms - State.lastStepMs) > CONFIG.COOLDOWN_MS) {
                 State.steps++; State.lastStepMs = ms; DOM.vSteps.innerText = State.steps;
             }
         }
 
         function persistSession() {
-            if(!State.isActive) return localStorage.removeItem('STREVA_CACHE');
-            localStorage.setItem('STREVA_CACHE', JSON.stringify({ el: State.elapsed, st: State.steps, d: State.distance, c: State.coords, p: State.isPaused }));
+            if(!State.isActive) {
+                localStorage.removeItem('STREVA_CACHE');
+                return;
+            }
+            localStorage.setItem('STREVA_CACHE', JSON.stringify({
+                el: State.elapsed, st: State.steps, d: State.distance, c: State.coords, p: State.isPaused
+            }));
         }
 
         function restoreSession() {
             const str = localStorage.getItem('STREVA_CACHE');
             if (!str) return;
             const cache = JSON.parse(str);
-            State.isActive = true; State.elapsed = cache.el; State.steps = cache.st; State.distance = cache.d; State.coords = cache.c; State.isPaused = cache.p;
+            
+            State.isActive = true; State.elapsed = cache.el; State.steps = cache.st;
+            State.distance = cache.d; State.coords = cache.c; State.isPaused = cache.p;
 
             DOM.vSteps.innerText = State.steps; DOM.vDist.innerText = State.distance.toFixed(2);
             DOM.vTime.innerText = formatTimeStr(State.elapsed); calculatePace();
 
             if(State.coords.length > 0) {
-                polyline.setLatLngs(State.coords); const lPt = State.coords[State.coords.length - 1]; map.setView(lPt, 16);
+                polyline.setLatLngs(State.coords);
+                const lPt = State.coords[State.coords.length - 1];
+                map.setView(lPt, 16);
                 if (!currentMarker) currentMarker = L.circleMarker(lPt, { radius: 7, fillColor: "#fff", color: "var(--app-accent)", weight: 3 }).addTo(map);
                 else currentMarker.setLatLng(lPt);
             }
+
             DOM.btnFinish.classList.remove('opacity-40', 'pointer-events-none');
+            
             if(State.isPaused) {
                 DOM.iStart.classList.remove('hidden'); DOM.iPause.classList.add('hidden');
             } else {
                 DOM.iStart.classList.add('hidden'); DOM.iPause.classList.remove('hidden');
-                window.addEventListener('devicemotion', handleMotion, true); startGPS();
-                State.timerId = setInterval(() => { State.elapsed++; DOM.vTime.innerText = formatTimeStr(State.elapsed); calculatePace(); persistSession(); }, 1000);
+                window.addEventListener('devicemotion', handleMotion, true);
+                startGPS();
+                State.timerId = setInterval(() => { 
+                    State.elapsed++; DOM.vTime.innerText = formatTimeStr(State.elapsed); 
+                    calculatePace(); persistSession(); 
+                }, 1000);
             }
         }
 
         function toggleEngine() {
             if(!State.isActive) {
                 State.isActive = true; State.isPaused = false; State.steps = 0; State.distance = 0; State.elapsed = 0; State.coords = [];
-                polyline.setLatLngs([]); DOM.vSteps.innerText = '0'; DOM.vDist.innerText = '0.00'; DOM.vTime.innerText = '00:00'; DOM.vPace.innerText = '--:--';
+                polyline.setLatLngs([]); 
+                DOM.vSteps.innerText = '0'; DOM.vDist.innerText = '0.00'; DOM.vTime.innerText = '00:00'; DOM.vPace.innerText = '--:--';
+                
                 DOM.iStart.classList.add('hidden'); DOM.iPause.classList.remove('hidden');
                 DOM.btnFinish.classList.remove('opacity-40', 'pointer-events-none');
                 
-                window.addEventListener('devicemotion', handleMotion, true); startGPS();
-                State.timerId = setInterval(() => { State.elapsed++; DOM.vTime.innerText = formatTimeStr(State.elapsed); calculatePace(); persistSession(); }, 1000);
+                window.addEventListener('devicemotion', handleMotion, true);
+                startGPS();
+                State.timerId = setInterval(() => { 
+                    State.elapsed++; DOM.vTime.innerText = formatTimeStr(State.elapsed); 
+                    calculatePace(); persistSession(); 
+                }, 1000);
+            
             } else if(State.isActive && !State.isPaused) {
-                State.isPaused = true; DOM.iStart.classList.remove('hidden'); DOM.iPause.classList.add('hidden');
+                State.isPaused = true; 
+                DOM.iStart.classList.remove('hidden'); DOM.iPause.classList.add('hidden');
                 clearInterval(State.timerId); window.removeEventListener('devicemotion', handleMotion, true);
                 if(State.watchId) navigator.geolocation.clearWatch(State.watchId);
                 persistSession();
+            
             } else if(State.isActive && State.isPaused) {
-                State.isPaused = false; DOM.iStart.classList.add('hidden'); DOM.iPause.classList.remove('hidden');
-                window.addEventListener('devicemotion', handleMotion, true); startGPS();
-                State.timerId = setInterval(() => { State.elapsed++; DOM.vTime.innerText = formatTimeStr(State.elapsed); calculatePace(); persistSession(); }, 1000);
+                State.isPaused = false; 
+                DOM.iStart.classList.add('hidden'); DOM.iPause.classList.remove('hidden');
+                window.addEventListener('devicemotion', handleMotion, true);
+                startGPS();
+                State.timerId = setInterval(() => { 
+                    State.elapsed++; DOM.vTime.innerText = formatTimeStr(State.elapsed); 
+                    calculatePace(); persistSession(); 
+                }, 1000);
             }
         }
 
         function executeFinish() {
             if(!State.isActive) return;
-            clearInterval(State.timerId); window.removeEventListener('devicemotion', handleMotion, true);
+            
+            clearInterval(State.timerId);
+            window.removeEventListener('devicemotion', handleMotion, true);
             if(State.watchId) navigator.geolocation.clearWatch(State.watchId);
             
-            saveHistoryData();
+            const finalAveragePace = getAveragePace();
+            saveHistoryData(finalAveragePace);
             
-            let finalPace = DOM.vPace.innerText;
-            if(finalPace !== "--:--") finalPace += " /km";
+            let paceUI = finalAveragePace;
+            if(paceUI !== "--:--") paceUI += " /km";
 
-            renderCanvasImage(State.coords, State.distance.toFixed(2), finalPace, formatTimeExport(State.elapsed));
+            renderCanvasImage(State.coords, State.distance.toFixed(2), paceUI, formatTimeExport(State.elapsed));
             DOM.mSum.classList.replace('hidden', 'flex');
             
             State.isActive = false; persistSession();
@@ -531,12 +579,12 @@
             DOM.gpsInd.innerText = "STANDBY"; DOM.gpsInd.className = "text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-0.5";
         }
 
-        function saveHistoryData() {
+        function saveHistoryData(avgPace) {
             const data = {
                 id: Date.now(), 
                 date: new Date().toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit' }),
                 steps: State.steps, distance: State.distance.toFixed(2), elapsed: State.elapsed,
-                durationUI: formatTimeStr(State.elapsed), pace: DOM.vPace.innerText, coords: State.coords 
+                durationUI: formatTimeStr(State.elapsed), pace: avgPace, coords: State.coords 
             };
             let hist = JSON.parse(localStorage.getItem('STREVA_HIST') || '[]');
             hist.unshift(data); localStorage.setItem('STREVA_HIST', JSON.stringify(hist)); renderHistoryUI();
@@ -553,7 +601,6 @@
                     <div class="flex justify-between items-center">
                         <span class="text-[10px] text-accent font-black uppercase tracking-wider">${item.date}</span>
                         <div class="flex items-center gap-2">
-                            <!-- BUGFIX: Event Bubbling distop, intervensi Z-Index -->
                             <button onclick="promptDeleteHistory(event, ${item.id})" class="text-red-500 opacity-60 hover:opacity-100 hover:bg-red-500/20 p-1.5 rounded-md transition-all active:scale-90 relative z-20">
                                 <i data-lucide="trash-2" class="w-3.5 h-3.5 pointer-events-none"></i>
                             </button>
@@ -582,16 +629,14 @@
             }
         };
 
-        // --- MANAJEMEN PENGHAPUSAN RIWAYAT (MODAL CUSTOM) ---
         window.promptDeleteHistory = (e, id) => {
-            e.stopPropagation(); // Stop parent div click event
+            e.stopPropagation(); 
             pendingDeleteId = id;
             DOM.mDel.classList.replace('hidden', 'flex');
         };
 
         DOM.btnCancelDel.onclick = () => {
-            pendingDeleteId = null;
-            DOM.mDel.classList.replace('flex', 'hidden');
+            pendingDeleteId = null; DOM.mDel.classList.replace('flex', 'hidden');
         };
 
         DOM.btnConfirmDel.onclick = () => {
@@ -600,11 +645,29 @@
             hist = hist.filter(h => h.id !== pendingDeleteId);
             localStorage.setItem('STREVA_HIST', JSON.stringify(hist));
             renderHistoryUI();
-            pendingDeleteId = null;
-            DOM.mDel.classList.replace('flex', 'hidden');
+            pendingDeleteId = null; DOM.mDel.classList.replace('flex', 'hidden');
         };
 
-        // KANVAS EXPORTER
+        document.getElementById('btn-clear-history').onclick = () => {
+            const hist = JSON.parse(localStorage.getItem('STREVA_HIST') || '[]');
+            if(hist.length === 0) return;
+            pendingDeleteId = 'ALL';
+            document.querySelector('#modal-confirm-delete h3').innerText = 'HAPUS SEMUA RIWAYAT?';
+            DOM.mDel.classList.replace('hidden', 'flex');
+        };
+
+        const oldConfirm = DOM.btnConfirmDel.onclick;
+        DOM.btnConfirmDel.onclick = () => {
+            if(pendingDeleteId === 'ALL') {
+                localStorage.removeItem('STREVA_HIST');
+                renderHistoryUI();
+                pendingDeleteId = null; DOM.mDel.classList.replace('flex', 'hidden');
+                document.querySelector('#modal-confirm-delete h3').innerText = 'HAPUS RIWAYAT?';
+                return;
+            }
+            oldConfirm();
+        };
+
         function renderCanvasImage(cData, dStr, pStr, tStr) {
             const cvs = DOM.cExp; const sW = 1080; const sH = 1350; 
             cvs.width = sW; cvs.height = sH; const ctx = cvs.getContext('2d');
@@ -654,7 +717,6 @@
             ctx.font = '900 45px Inter, sans-serif'; ctx.fillText('STRAVA', sW/2, 1300);
         }
 
-        // --- BOOTSTRAP ---
         document.addEventListener('DOMContentLoaded', () => {
             initTheme(); initMap(); lucide.createIcons(); renderHistoryUI();
             
