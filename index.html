@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#000000">
-    <title>PWA Tracker Pro</title>
-
+    <meta name="theme-color" content="#fc4c02" id="meta-theme-color">
+    <title>STREVA RUNNING</title>
+    
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -13,363 +13,553 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
-        :root { --brand: #fc4c02; }
-        body { overscroll-behavior-y: contain; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #000; }
-        #map-container { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; filter: saturate(1.2) contrast(1.1); }
-        .ui-layer { z-index: 10; pointer-events: none; }
-        .interactive { pointer-events: auto; }
-        .glass-panel { background: rgba(15, 15, 18, 0.85); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.05); border-radius: 28px; }
-        .leaflet-control-attribution, .leaflet-control-zoom { display: none !important; }
-        .map-gradient { background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 25%, rgba(0,0,0,0) 60%, #000000 100%); }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         
-        /* Modal Animation */
-        .modal-enter { animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        @keyframes modalFadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        :root {
+            --app-bg: #09090b;
+            --app-text: #ffffff;
+            --app-accent: #fc4c02;
+            --app-panel-rgb: 24, 24, 27;
+            --app-panel-opacity: 0.85;
+        }
+
+        body { 
+            overscroll-behavior-y: contain; 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            background-color: var(--app-bg);
+            color: var(--app-text);
+        }
+
+        .bg-accent { background-color: var(--app-accent) !important; }
+        .text-accent { color: var(--app-accent) !important; }
+        .border-accent { border-color: var(--app-accent) !important; }
+        .panel-bg { 
+            background: rgba(var(--app-panel-rgb), var(--app-panel-opacity)); 
+            border: 1px solid rgba(150, 150, 150, 0.15); 
+            backdrop-filter: blur(16px); 
+        }
+        
+        /* Map Sandbox - Strict Z-Index & Position */
+        #map-wrapper { 
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+            height: 240px; 
+            border-radius: 24px; 
+            overflow: hidden; 
+            position: relative; 
+            cursor: pointer;
+            z-index: 10;
+        }
+        
+        /* OVERRIDE MUTLAK UNTUK FULLSCREEN */
+        #map-wrapper.fullscreen-mode { 
+            position: fixed !important; 
+            top: 0 !important; 
+            left: 0 !important; 
+            width: 100vw !important; 
+            height: 100dvh !important; 
+            border-radius: 0 !important; 
+            z-index: 9999 !important; 
+            cursor: default !important;
+        }
+
+        #map-container { width: 100%; height: 100%; filter: brightness(0.95) contrast(1.1); }
+        .leaflet-control-attribution, .leaflet-control-zoom { display: none !important; }
+        
+        /* Override Color Picker Native Styling for Custom Wrappers */
+        input[type="color"] { -webkit-appearance: none; border: none; padding: 0; outline: none; }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: none; }
+
+        .modal-pop { animation: pop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes pop { 0% { opacity: 0; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
+        button, a, input { pointer-events: auto; }
     </style>
 </head>
-<body class="text-white overflow-hidden antialiased">
+<body class="antialiased h-[100dvh] flex flex-col overflow-hidden">
 
-    <div id="map-container"></div>
-    <div class="absolute inset-0 z-0 map-gradient pointer-events-none"></div>
+    <header class="w-full max-w-md mx-auto flex justify-between items-center p-4 pt-safe shrink-0 z-20">
+        <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-[14px] bg-accent flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
+                <i data-lucide="activity" class="w-6 h-6 text-white"></i>
+            </div>
+            <div class="flex flex-col justify-center">
+                <h1 class="font-black text-xl uppercase tracking-tight leading-none drop-shadow-sm">STREVA</h1>
+                <span id="gps-indicator" class="text-[10px] text-red-500 font-bold uppercase tracking-wider mt-0.5">GPS OFF</span>
+            </div>
+        </div>
+        <button id="btn-settings" class="w-11 h-11 rounded-full panel-bg border border-[rgba(255,255,255,0.1)] flex items-center justify-center shadow-lg active:scale-95 transition-transform shrink-0">
+            <i data-lucide="settings" class="w-5 h-5 opacity-90"></i>
+        </button>
+    </header>
 
-    <div class="absolute inset-0 flex flex-col justify-between ui-layer p-4 pb-8 safe-area-pt">
+    <main class="w-full max-w-md mx-auto flex flex-col gap-4 px-4 pb-4 flex-1 overflow-y-auto z-10 relative">
         
-        <header class="flex justify-between items-center interactive mt-2 px-2">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-full bg-[#fc4c02] flex items-center justify-center shadow-[0_0_15px_rgba(252,76,2,0.5)]">
-                    <i data-lucide="flame" class="w-5 h-5 text-white"></i>
-                </div>
-                <h1 class="font-bold text-xl tracking-tight">Run Track</h1>
+        <div id="map-wrapper" class="shadow-xl border border-[rgba(255,255,255,0.1)]">
+            <div id="map-container"></div>
+            
+            <button id="btn-close-map" class="absolute top-16 right-4 z-[10000] w-12 h-12 rounded-full bg-black/90 border border-white/20 hidden items-center justify-center text-white active:scale-95 shadow-2xl backdrop-blur-md">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            <div id="map-hint" class="absolute bottom-4 left-1/2 -translate-x-1/2 z-[30] px-4 py-1.5 rounded-full bg-black/70 text-[10px] text-white font-bold tracking-wider pointer-events-none backdrop-blur-md">
+                Buka Peta Penuh
             </div>
-            <div id="gps-status" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500/20 text-red-500 border border-red-500/30 text-xs font-semibold backdrop-blur-md">
-                <div class="w-2 h-2 rounded-full bg-current animate-pulse"></div>
-                <span id="gps-text">No GPS</span>
+        </div>
+
+        <div class="panel-bg rounded-[32px] p-6 flex flex-col items-center justify-center min-h-[160px] shadow-lg border-t border-white/10 shrink-0">
+            <span class="text-[11px] font-bold opacity-50 uppercase tracking-[0.3em] mb-1">Total Langkah</span>
+            <span id="val-steps" class="text-[5.5rem] leading-none font-black tracking-tighter text-accent drop-shadow-md">0</span>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 w-full shrink-0">
+            <div class="panel-bg rounded-2xl p-4 text-center">
+                <span class="text-[10px] font-bold opacity-50 uppercase tracking-widest block mb-1">Jarak</span>
+                <span id="val-dist" class="text-2xl font-black font-mono">0.00</span>
+                <span class="text-[10px] opacity-50 font-medium block mt-0.5">KM</span>
             </div>
-        </header>
-
-        <main class="w-full max-w-md mx-auto interactive">
-            <div class="glass-panel p-5 shadow-2xl flex flex-col relative overflow-hidden">
-                
-                <!-- Main Metrics Grid -->
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div class="flex flex-col">
-                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Jarak</span>
-                        <span class="text-4xl font-black font-mono text-white flex items-baseline gap-1">
-                            <span id="val-distance">0.00</span><span class="text-sm text-gray-400">km</span>
-                        </span>
-                    </div>
-                    <div class="flex flex-col items-end">
-                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Durasi</span>
-                        <span id="val-time" class="text-4xl font-black font-mono text-white">00:00</span>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4 mb-6 pt-4 border-t border-white/10">
-                    <div class="flex flex-col">
-                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Pace (Waktu/Km)</span>
-                        <span id="val-pace" class="text-2xl font-bold font-mono text-[#fc4c02]">--:--</span>
-                    </div>
-                    <div class="flex flex-col items-end">
-                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Langkah</span>
-                        <span id="val-steps" class="text-2xl font-bold font-mono text-white">0</span>
-                    </div>
-                </div>
-
-                <!-- Controls -->
-                <div class="flex items-center justify-between mt-2">
-                    <button id="btn-settings" class="w-12 h-12 rounded-full bg-gray-800 text-gray-400 flex items-center justify-center active:scale-95 transition-transform border border-gray-700">
-                        <i data-lucide="settings" class="w-5 h-5"></i>
-                    </button>
-
-                    <button id="btn-toggle" class="relative group flex items-center justify-center w-20 h-20 bg-[#fc4c02] rounded-full shadow-[0_8px_32px_rgba(252,76,2,0.4)] transition-all active:scale-90">
-                        <i id="icon-start" data-lucide="play" class="w-8 h-8 text-white fill-current ml-1"></i>
-                        <i id="icon-stop" data-lucide="square" class="w-6 h-6 text-white fill-current hidden"></i>
-                    </button>
-                    
-                    <button id="btn-finish" class="w-12 h-12 rounded-full bg-gray-800 text-gray-400 flex items-center justify-center active:scale-95 transition-transform border border-gray-700 opacity-50 pointer-events-none">
-                        <i data-lucide="flag" class="w-5 h-5"></i>
-                    </button>
-                </div>
+            <div class="panel-bg rounded-2xl p-4 text-center">
+                <span class="text-[10px] font-bold opacity-50 uppercase tracking-widest block mb-1">Pace</span>
+                <span id="val-pace" class="text-2xl font-black font-mono text-accent">--:--</span>
+                <span class="text-[10px] opacity-50 font-medium block mt-0.5">/KM</span>
             </div>
-        </main>
-    </div>
+            <div class="panel-bg rounded-2xl p-4 text-center">
+                <span class="text-[10px] font-bold opacity-50 uppercase tracking-widest block mb-1">Waktu</span>
+                <span id="val-time" class="text-2xl font-black font-mono">00:00</span>
+                <span class="text-[10px] opacity-50 font-medium block mt-0.5">MIN</span>
+            </div>
+        </div>
+    </main>
 
-    <!-- Settings Modal -->
-    <div id="modal-settings" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex-col justify-end interactive">
-        <div class="bg-gray-900 w-full rounded-t-3xl p-6 border-t border-gray-800 modal-enter">
+    <footer class="w-full max-w-md mx-auto p-4 shrink-0 z-20 pb-safe">
+        <div class="panel-bg rounded-[40px] p-3 flex items-center justify-between px-6 shadow-2xl border border-[rgba(255,255,255,0.1)]">
+            <div class="w-14"></div> <button id="btn-toggle" class="w-20 h-20 bg-accent rounded-full flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.4)] transition-transform active:scale-90 z-[60]">
+                <i id="icon-start" data-lucide="play" class="w-10 h-10 text-white fill-current ml-2"></i>
+                <i id="icon-pause" data-lucide="pause" class="w-10 h-10 text-white fill-current hidden"></i>
+            </button>
+            
+            <button id="btn-finish" class="w-14 h-14 rounded-full bg-red-500/10 text-red-500 border border-red-500/30 flex items-center justify-center transition-all opacity-40 pointer-events-none active:scale-95 z-[60]">
+                <i data-lucide="square" class="w-6 h-6 fill-current"></i>
+            </button>
+        </div>
+    </footer>
+
+    <div id="modal-settings" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[99999] hidden items-center justify-center p-4">
+        <div class="w-full max-w-md bg-[var(--app-bg)] rounded-[32px] p-6 max-h-[90dvh] overflow-y-auto modal-pop shadow-2xl border border-[rgba(255,255,255,0.1)]" id="settings-content">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold">Pengaturan</h2>
-                <button id="btn-close-settings" class="p-2 bg-gray-800 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <h2 class="text-xl font-black uppercase tracking-tight">Kontrol Sistem</h2>
+                <button id="btn-close-settings" class="p-2 rounded-full panel-bg"><i data-lucide="x" class="w-5 h-5 opacity-80"></i></button>
             </div>
             
             <div class="space-y-6">
-                <!-- Sensitivity -->
-                <div>
-                    <div class="flex justify-between mb-2">
-                        <label class="text-sm font-semibold text-gray-400">Sensitivitas Guncangan</label>
-                        <span id="lbl-sens" class="text-sm font-mono text-[#fc4c02] font-bold">Medium (1.5)</span>
+                
+                <div class="p-5 rounded-3xl panel-bg border border-white/5 shadow-inner">
+                    <span class="text-[11px] font-bold opacity-50 uppercase tracking-widest block mb-4">Kustomisasi Visual</span>
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-5">
+                        <label class="flex flex-col gap-2 p-3 rounded-2xl bg-black/40 border border-white/5 cursor-pointer hover:border-white/20 transition-colors">
+                            <span class="text-[10px] font-semibold opacity-70 uppercase">Latar Utama</span>
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full overflow-hidden border border-white/20 shrink-0 relative shadow-inner">
+                                    <input type="color" id="theme-bg" value="#09090b" class="absolute -top-4 -left-4 w-16 h-16 cursor-pointer">
+                                </div>
+                                <span class="text-xs font-mono opacity-90" id="hex-bg">#09090b</span>
+                            </div>
+                        </label>
+                        <label class="flex flex-col gap-2 p-3 rounded-2xl bg-black/40 border border-white/5 cursor-pointer hover:border-white/20 transition-colors">
+                            <span class="text-[10px] font-semibold opacity-70 uppercase">Aksen Tombol</span>
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full overflow-hidden border border-white/20 shrink-0 relative shadow-inner">
+                                    <input type="color" id="theme-accent" value="#fc4c02" class="absolute -top-4 -left-4 w-16 h-16 cursor-pointer">
+                                </div>
+                                <span class="text-xs font-mono opacity-90" id="hex-accent">#fc4c02</span>
+                            </div>
+                        </label>
+                        <label class="flex flex-col gap-2 p-3 rounded-2xl bg-black/40 border border-white/5 cursor-pointer hover:border-white/20 transition-colors">
+                            <span class="text-[10px] font-semibold opacity-70 uppercase">Warna Panel</span>
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full overflow-hidden border border-white/20 shrink-0 relative shadow-inner">
+                                    <input type="color" id="theme-panel" value="#18181b" class="absolute -top-4 -left-4 w-16 h-16 cursor-pointer">
+                                </div>
+                                <span class="text-xs font-mono opacity-90" id="hex-panel">#18181b</span>
+                            </div>
+                        </label>
+                        <label class="flex flex-col gap-2 p-3 rounded-2xl bg-black/40 border border-white/5 cursor-pointer hover:border-white/20 transition-colors">
+                            <span class="text-[10px] font-semibold opacity-70 uppercase">Teks Tulisan</span>
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full overflow-hidden border border-white/20 shrink-0 relative shadow-inner">
+                                    <input type="color" id="theme-text" value="#ffffff" class="absolute -top-4 -left-4 w-16 h-16 cursor-pointer">
+                                </div>
+                                <span class="text-xs font-mono opacity-90" id="hex-text">#ffffff</span>
+                            </div>
+                        </label>
                     </div>
-                    <input type="range" id="input-sens" min="0.5" max="4.0" step="0.1" value="1.5" class="w-full accent-[#fc4c02]">
-                    <p class="text-[10px] text-gray-500 mt-1">Geser ke kiri jika langkah sulit terdeteksi. Geser ke kanan jika terlalu sensitif.</p>
+
+                    <div class="p-4 rounded-2xl bg-black/40 border border-white/5">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-[10px] font-semibold opacity-70 uppercase">Ketebalan Panel (Transparansi)</span>
+                            <span id="lbl-opacity" class="text-xs font-black font-mono text-accent">85%</span>
+                        </div>
+                        <input type="range" id="theme-opacity" min="0.1" max="1.0" step="0.05" value="0.85" class="w-full bg-gradient-to-r from-transparent to-accent h-2 rounded-lg appearance-none opacity-90">
+                    </div>
+
+                    <button id="btn-reset-theme" class="w-full py-3 mt-4 rounded-xl border border-white/10 bg-white/5 opacity-80 text-xs font-bold uppercase hover:bg-white/10 active:scale-95 transition-all">
+                        Kembalikan Standar
+                    </button>
+                </div>
+                <div class="p-5 rounded-2xl panel-bg">
+                    <div class="flex justify-between mb-3">
+                        <span class="text-[11px] font-bold opacity-50 uppercase tracking-widest">Filter Guncangan</span>
+                        <span id="lbl-sens" class="text-xs font-black font-mono text-accent">1.5</span>
+                    </div>
+                    <input type="range" id="input-sens" min="0.5" max="4.0" step="0.1" value="1.5" class="w-full bg-accent h-2 rounded-lg appearance-none opacity-80">
                 </div>
 
-                <!-- Export GPX -->
-                <button id="btn-export-gpx" class="w-full py-3 rounded-xl bg-gray-800 border border-gray-700 font-semibold flex items-center justify-center gap-2 active:bg-gray-700">
-                    <i data-lucide="download" class="w-4 h-4"></i> Ekspor Track (GPX)
+                <button id="btn-install" class="w-full py-4 rounded-xl bg-accent text-white font-black text-sm uppercase tracking-widest hidden items-center justify-center gap-2 shadow-lg active:scale-95 transition-transform">
+                    <i data-lucide="layout-grid" class="w-5 h-5"></i> Instal App
                 </button>
 
-                <!-- Install PWA / Widget -->
-                <button id="btn-install" class="w-full py-3 rounded-xl bg-[#fc4c02] text-white font-bold flex items-center justify-center gap-2 hidden active:bg-orange-600 shadow-[0_0_15px_rgba(252,76,2,0.3)]">
-                    <i data-lucide="download-cloud" class="w-4 h-4"></i> Tambahkan App/Widget ke Home
-                </button>
+                <div>
+                    <span class="text-[11px] font-bold opacity-50 uppercase tracking-widest block mb-3">Riwayat Tracking</span>
+                    <div id="history-container" class="space-y-3 max-h-[300px] overflow-y-auto pr-1 pb-4"></div>
+                </div>
             </div>
         </div>
     </div>
 
-    <script>
-        // ENGINE CONFIG
-        const ENGINE = {
-            THRESHOLD: 1.5, // Dinamis via slider
-            COOLDOWN_MS: 300,
-            GPS_ACCURACY_LIMIT: 40 // Meter
-        };
+    <div id="modal-summary" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-[99999] hidden items-center justify-center p-4">
+        <div class="w-full max-w-sm flex flex-col gap-5 modal-pop" id="summary-content">
+            <div class="flex justify-between items-center px-2">
+                <h3 class="text-xl text-white font-black uppercase tracking-wider">Hasil Ekspor</h3>
+                <button id="btn-close-summary" class="p-2 rounded-full bg-white/10 text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <div class="w-full aspect-square rounded-[32px] overflow-hidden border border-white/10 bg-[#09090b] shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative">
+                <canvas id="export-canvas" class="w-full h-full object-cover"></canvas>
+            </div>
+            <button id="btn-download" class="w-full py-4 rounded-2xl bg-[#fc4c02] text-white font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 shadow-[0_10px_30px_rgba(252,76,2,0.4)] transition-transform active:scale-95">
+                <i data-lucide="download" class="w-5 h-5"></i> Simpan Gambar (.PNG)
+            </button>
+        </div>
+    </div>
 
+    <script>
+        const CONFIG = { THRESHOLD: 1.5, COOLDOWN_MS: 300, MIN_ACCURACY: 45 };
         const State = {
-            isActive: false, elapsedSec: 0, steps: 0, distance: 0,
-            gravity: 9.81, lastStepTime: 0, coordinates: [], watchId: null, timerId: null,
-            deferredPrompt: null // Untuk PWA Install
+            isActive: false, isPaused: false, elapsed: 0, steps: 0, distance: 0,
+            gravity: 9.81, lastStepMs: 0, coords: [], watchId: null, timerId: null, deferredPrompt: null
         };
 
         const DOM = {
-            valSteps: document.getElementById('val-steps'), valDist: document.getElementById('val-distance'),
-            valTime: document.getElementById('val-time'), valPace: document.getElementById('val-pace'),
-            btnToggle: document.getElementById('btn-toggle'), iconStart: document.getElementById('icon-start'),
-            iconStop: document.getElementById('icon-stop'), btnFinish: document.getElementById('btn-finish'),
-            gpsStatus: document.getElementById('gps-status'), gpsText: document.getElementById('gps-text'),
-            modalSettings: document.getElementById('modal-settings'), btnSettings: document.getElementById('btn-settings'),
-            btnCloseSettings: document.getElementById('btn-close-settings'), inputSens: document.getElementById('input-sens'),
-            lblSens: document.getElementById('lbl-sens'), btnExportGPX: document.getElementById('btn-export-gpx'),
-            btnInstall: document.getElementById('btn-install')
+            vSteps: document.getElementById('val-steps'), vDist: document.getElementById('val-dist'),
+            vTime: document.getElementById('val-time'), vPace: document.getElementById('val-pace'),
+            btnToggle: document.getElementById('btn-toggle'), iStart: document.getElementById('icon-start'),
+            iPause: document.getElementById('icon-pause'), btnFinish: document.getElementById('btn-finish'),
+            gpsInd: document.getElementById('gps-indicator'), 
+            mapWrap: document.getElementById('map-wrapper'), btnCloseMap: document.getElementById('btn-close-map'), mapHint: document.getElementById('map-hint'),
+            mSet: document.getElementById('modal-settings'), mSum: document.getElementById('modal-summary'),
+            btnSet: document.getElementById('btn-settings'), btnCloseSet: document.getElementById('btn-close-settings'), btnCloseSum: document.getElementById('btn-close-summary'), 
+            btnDl: document.getElementById('btn-download'), cExp: document.getElementById('export-canvas'), hCont: document.getElementById('history-container'),
+            inpSens: document.getElementById('input-sens'), lblSens: document.getElementById('lbl-sens'), btnInstall: document.getElementById('btn-install')
         };
 
         let map, polyline, currentMarker;
 
-        // --- MAP INITIALIZATION ---
+        // Tutup Modal dari Latar Belakang
+        window.addEventListener('click', (e) => {
+            if (e.target === DOM.mSet) DOM.mSet.classList.replace('flex', 'hidden');
+            if (e.target === DOM.mSum) DOM.mSum.classList.replace('flex', 'hidden');
+        });
+
+        // MESIN TEMA
+        function initTheme() {
+            const cache = JSON.parse(localStorage.getItem('STREVA_THEME'));
+            const def = { bg: '#09090b', text: '#ffffff', panel: '#18181b', accent: '#fc4c02', opacity: 0.85 };
+            const current = cache || def;
+            
+            applyTheme(current.bg, current.text, current.panel, current.accent, current.opacity);
+            
+            document.getElementById('theme-bg').value = current.bg;
+            document.getElementById('theme-text').value = current.text;
+            document.getElementById('theme-panel').value = current.panel;
+            document.getElementById('theme-accent').value = current.accent;
+            document.getElementById('theme-opacity').value = current.opacity;
+
+            const updateLabels = (b, t, p, a, o) => {
+                document.getElementById('hex-bg').innerText = b;
+                document.getElementById('hex-text').innerText = t;
+                document.getElementById('hex-panel').innerText = p;
+                document.getElementById('hex-accent').innerText = a;
+                document.getElementById('lbl-opacity').innerText = Math.round(o * 100) + '%';
+            };
+            updateLabels(current.bg, current.text, current.panel, current.accent, current.opacity);
+
+            const syncTheme = () => {
+                const b = document.getElementById('theme-bg').value;
+                const t = document.getElementById('theme-text').value;
+                const p = document.getElementById('theme-panel').value;
+                const a = document.getElementById('theme-accent').value;
+                const o = document.getElementById('theme-opacity').value;
+                
+                applyTheme(b, t, p, a, o);
+                updateLabels(b, t, p, a, o);
+                localStorage.setItem('STREVA_THEME', JSON.stringify({ bg: b, text: t, panel: p, accent: a, opacity: o }));
+            };
+
+            ['theme-bg', 'theme-text', 'theme-panel', 'theme-accent', 'theme-opacity'].forEach(id => document.getElementById(id).addEventListener('input', syncTheme));
+
+            document.getElementById('btn-reset-theme').onclick = () => {
+                applyTheme(def.bg, def.text, def.panel, def.accent, def.opacity);
+                document.getElementById('theme-bg').value = def.bg; document.getElementById('theme-text').value = def.text;
+                document.getElementById('theme-panel').value = def.panel; document.getElementById('theme-accent').value = def.accent;
+                document.getElementById('theme-opacity').value = def.opacity;
+                updateLabels(def.bg, def.text, def.panel, def.accent, def.opacity);
+                localStorage.removeItem('STREVA_THEME');
+            };
+        }
+
+        function hexToRgbStr(hex) {
+            let r = 0, g = 0, b = 0;
+            if (hex.length === 7) { r = parseInt(hex.slice(1,3), 16); g = parseInt(hex.slice(3,5), 16); b = parseInt(hex.slice(5,7), 16); }
+            return `${r}, ${g}, ${b}`;
+        }
+
+        function applyTheme(bg, text, panel, accent, opacity = 0.85) {
+            const r = document.documentElement.style;
+            r.setProperty('--app-bg', bg); r.setProperty('--app-text', text); r.setProperty('--app-accent', accent); 
+            r.setProperty('--app-panel-rgb', hexToRgbStr(panel));
+            r.setProperty('--app-panel-opacity', opacity);
+            document.getElementById('meta-theme-color').content = accent;
+            if(polyline) polyline.setStyle({ color: accent });
+        }
+
+        // MESIN PETA
         function initMap() {
-            map = L.map('map-container', { zoomControl: false }).setView([-2.5489, 118.0149], 15);
+            map = L.map('map-container', { zoomControl: false, dragging: true }).setView([-2.5489, 118.0149], 5);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
-            polyline = L.polyline([], { color: '#fc4c02', weight: 5, opacity: 0.9, lineCap: 'round', lineJoin: 'round' }).addTo(map);
-        }
+            polyline = L.polyline([], { color: 'var(--app-accent)', weight: 7, opacity: 0.9, lineCap: 'round', lineJoin: 'round' }).addTo(map);
 
-        // --- UTILS ---
-        function calcDistance(lat1, lon1, lat2, lon2) {
-            const p = Math.PI / 180, c = Math.cos;
-            const a = 0.5 - c((lat2 - lat1) * p)/2 + c(lat1 * p) * c(lat2 * p) * (1 - c((lon2 - lon1) * p))/2;
-            return 12742 * Math.asin(Math.sqrt(a)); // KM
-        }
-
-        function formatTime(s) {
-            return (s - (s %= 60)) / 60 + (9 < s ? ':' : ':0') + s;
-        }
-
-        // Kalkulasi Pace (Menit per Kilometer)
-        function updatePace() {
-            if (State.distance < 0.01 || State.elapsedSec < 5) return; // Butuh min 10 meter untuk kalkulasi akurat
-            const paceSecondsPerKm = State.elapsedSec / State.distance;
-            const pMins = Math.floor(paceSecondsPerKm / 60);
-            const pSecs = Math.floor(paceSecondsPerKm % 60);
-            
-            // Batasi pace logika (jika lebih dari 60 menit/km berarti tidak wajar)
-            if (pMins > 60) DOM.valPace.innerText = ">60:00";
-            else DOM.valPace.innerText = `${pMins}:${pSecs.toString().padStart(2, '0')}`;
-        }
-
-        // --- SENSOR LOGIC (HIGH PASS FILTER) ---
-        function motionHandler(e) {
-            // Wajib gunakan accelerationIncludingGravity untuk mem-bypass pemblokiran hardware
-            let raw = e.accelerationIncludingGravity || e.acceleration;
-            if (!raw || raw.x === null) return;
-
-            // Kalkulasi Magnitudo Absolut Vektor 3D
-            const mag = Math.sqrt(raw.x**2 + raw.y**2 + raw.z**2);
-            
-            // Low-Pass Filter: Isolasi Gravitasi Bumi secara dinamis
-            const alpha = 0.9;
-            State.gravity = (alpha * State.gravity) + ((1 - alpha) * mag);
-            
-            // High-Pass Filter: Percepatan Linier Murni (Tanpa Gravitasi)
-            const linearAcc = Math.abs(mag - State.gravity);
-            
-            const now = Date.now();
-            if (linearAcc > ENGINE.THRESHOLD && (now - State.lastStepTime) > ENGINE.COOLDOWN_MS) {
-                State.steps++;
-                State.lastStepTime = now;
-                DOM.valSteps.innerText = State.steps;
-            }
-        }
-
-        // --- CORE TRACKING ---
-        async function toggleTracking() {
-            if (State.isActive) return stopTracking();
-
-            // iOS 13+ Otorisasi
-            if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-                try {
-                    const perm = await DeviceMotionEvent.requestPermission();
-                    if (perm !== 'granted') return alert('Akses Sensor Ditolak OS.');
-                } catch (e) {
-                    return alert('Wajib akses via HTTPS untuk menggunakan sensor.');
+            DOM.mapWrap.addEventListener('click', (e) => {
+                if(e.target === DOM.btnCloseMap || DOM.btnCloseMap.contains(e.target)) return;
+                if(!DOM.mapWrap.classList.contains('fullscreen-mode')) {
+                    DOM.mapWrap.classList.add('fullscreen-mode');
+                    DOM.btnCloseMap.classList.replace('hidden', 'flex');
+                    DOM.mapHint.classList.add('hidden');
+                    setTimeout(() => map.invalidateSize(), 300);
                 }
-            }
-            startTracking();
-        }
+            });
 
-        function startTracking() {
-            State.isActive = true; State.steps = 0; State.distance = 0; State.elapsedSec = 0; State.coordinates = [];
-            polyline.setLatLngs([]);
-            
-            DOM.iconStart.classList.add('hidden'); DOM.iconStop.classList.remove('hidden');
-            DOM.btnToggle.classList.replace('bg-[#fc4c02]', 'bg-gray-800');
-            DOM.btnFinish.classList.remove('opacity-50', 'pointer-events-none');
-            
-            DOM.valSteps.innerText = '0'; DOM.valDist.innerText = '0.00'; DOM.valTime.innerText = '00:00'; DOM.valPace.innerText = '--:--';
-
-            window.addEventListener('devicemotion', motionHandler, true);
-
-            State.timerId = setInterval(() => {
-                State.elapsedSec++;
-                DOM.valTime.innerText = formatTime(State.elapsedSec);
-                updatePace();
-            }, 1000);
-
-            startGPS();
-        }
-
-        function stopTracking() {
-            State.isActive = false;
-            clearInterval(State.timerId);
-            if (State.watchId) navigator.geolocation.clearWatch(State.watchId);
-            window.removeEventListener('devicemotion', motionHandler, true);
-
-            DOM.iconStop.classList.add('hidden'); DOM.iconStart.classList.remove('hidden');
-            DOM.btnToggle.classList.replace('bg-gray-800', 'bg-[#fc4c02]');
-            DOM.gpsStatus.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-500/20 text-gray-400 border border-gray-500/30 text-xs font-semibold backdrop-blur-md";
-            DOM.gpsText.innerText = "Standby";
+            DOM.btnCloseMap.addEventListener('click', (e) => {
+                e.stopPropagation();
+                DOM.mapWrap.classList.remove('fullscreen-mode');
+                DOM.btnCloseMap.classList.replace('flex', 'hidden');
+                DOM.mapHint.classList.remove('hidden');
+                setTimeout(() => map.invalidateSize(), 300);
+            });
         }
 
         function startGPS() {
-            if (!("geolocation" in navigator)) return;
-            DOM.gpsStatus.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-500/20 text-yellow-500 border border-yellow-500/30 text-xs font-semibold backdrop-blur-md";
-            DOM.gpsText.innerText = "Mencari GPS...";
-
+            if(!("geolocation" in navigator)) return;
+            DOM.gpsInd.innerText = "MENCARI GPS..."; DOM.gpsInd.className = "text-[10px] text-yellow-500 font-bold uppercase tracking-wider mt-0.5";
+            
             State.watchId = navigator.geolocation.watchPosition(
                 (pos) => {
-                    if (pos.coords.accuracy > ENGINE.GPS_ACCURACY_LIMIT) return; // Buang data cacat
-
-                    DOM.gpsStatus.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 text-xs font-semibold backdrop-blur-md";
-                    DOM.gpsText.innerText = "GPS Terkunci";
-
-                    const pt = [pos.coords.latitude, pos.coords.longitude, Date.now()]; // Simpan timestamp untuk GPX
+                    if (pos.coords.accuracy > CONFIG.MIN_ACCURACY) return;
+                    DOM.gpsInd.innerText = "GPS AKTIF"; DOM.gpsInd.className = "text-[10px] text-green-500 font-bold uppercase tracking-wider mt-0.5";
+                    const pt = [pos.coords.latitude, pos.coords.longitude];
                     
-                    if (State.coordinates.length > 0) {
-                        const lastPt = State.coordinates[State.coordinates.length - 1];
-                        const dist = calcDistance(lastPt[0], lastPt[1], pt[0], pt[1]);
-                        if (dist > 0.002) { // Minimum threshold pergerakan 2 meter untuk mencegah drift
-                            State.distance += dist;
-                            DOM.valDist.innerText = State.distance.toFixed(2);
-                        }
+                    if (State.coords.length > 0) {
+                        const last = State.coords[State.coords.length - 1];
+                        const d = calculateDistance(last[0], last[1], pt[0], pt[1]);
+                        if (d > 0.002) { State.distance += d; DOM.vDist.innerText = State.distance.toFixed(2); }
                     }
-
-                    State.coordinates.push(pt);
-                    polyline.addLatLng([pt[0], pt[1]]);
-                    map.setView([pt[0], pt[1]], 16, { animate: true });
-
-                    if (!currentMarker) currentMarker = L.circleMarker([pt[0], pt[1]], { radius: 8, fillColor: "#3b82f6", color: "#fff", weight: 3, opacity: 1, fillOpacity: 1 }).addTo(map);
-                    else currentMarker.setLatLng([pt[0], pt[1]]);
+                    
+                    State.coords.push(pt); polyline.addLatLng(pt); map.setView(pt, 16, { animate: true });
+                    if (!currentMarker) currentMarker = L.circleMarker(pt, { radius: 7, fillColor: "#fff", color: "var(--app-accent)", weight: 3, opacity: 1 }).addTo(map);
+                    else currentMarker.setLatLng(pt);
                 },
-                (err) => {
-                    DOM.gpsStatus.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500/20 text-red-500 border border-red-500/30 text-xs font-semibold backdrop-blur-md";
-                    DOM.gpsText.innerText = "Sinyal Hilang";
-                }, { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                (err) => { DOM.gpsInd.innerText = "SINYAL HILANG"; DOM.gpsInd.className = "text-[10px] text-red-500 font-bold uppercase tracking-wider mt-0.5"; },
+                { enableHighAccuracy: true, timeout: 7000, maximumAge: 0 }
             );
         }
 
-        // --- GPX EXPORT ---
-        function exportToGPX() {
-            if (State.coordinates.length === 0) return alert("Belum ada data rute untuk diekspor.");
-            
-            let gpxData = `<?xml version="1.0" encoding="UTF-8"?>
-<gpx version="1.1" creator="PWA Tracker Pro" xmlns="http://www.topografix.com/GPX/1/1">
-  <trk>
-    <name>Run Activity ${new Date().toLocaleDateString()}</name>
-    <trkseg>\n`;
-            
-            State.coordinates.forEach(c => {
-                gpxData += `      <trkpt lat="${c[0]}" lon="${c[1]}"><time>${new Date(c[2]).toISOString()}</time></trkpt>\n`;
-            });
-
-            gpxData += `    </trkseg>
-  </trk>
-</gpx>`;
-
-            const blob = new Blob([gpxData], { type: "application/gpx+xml" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = `Aktivitas_${Date.now()}.gpx`;
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const p = Math.PI / 180, c = Math.cos, a = 0.5 - c((lat2 - lat1) * p)/2 + c(lat1 * p) * c(lat2 * p) * (1 - c((lon2 - lon1) * p))/2;
+            return 12742 * Math.asin(Math.sqrt(a));
         }
 
-        // --- EVENT LISTENERS & PWA INIT ---
-        document.addEventListener('DOMContentLoaded', () => {
-            initMap(); lucide.createIcons();
-            
-            // UI Modals
-            DOM.btnSettings.onclick = () => DOM.modalSettings.classList.replace('hidden', 'flex');
-            DOM.btnCloseSettings.onclick = () => DOM.modalSettings.classList.replace('flex', 'hidden');
-            
-            // Sensitivitas logic
-            DOM.inputSens.oninput = (e) => {
-                ENGINE.THRESHOLD = parseFloat(e.target.value);
-                const val = ENGINE.THRESHOLD;
-                let lbl = "Medium";
-                if(val < 1.0) lbl = "Tinggi (Sensitif)";
-                else if(val > 2.0) lbl = "Rendah (Kasar)";
-                DOM.lblSens.innerText = `${lbl} (${val.toFixed(1)})`;
-            };
+        function formatTimeStr(s) { return (s-(s%=60))/60+(9<s?':':':0')+s; }
 
-            // Tombol Eksekusi
-            DOM.btnToggle.onclick = toggleTracking;
-            DOM.btnExportGPX.onclick = exportToGPX;
-            DOM.btnFinish.onclick = () => {
-                if(State.isActive) stopTracking();
-                alert(`Latihan Selesai!\nJarak: ${State.distance.toFixed(2)} km\nPace: ${DOM.valPace.innerText}\nLangkah: ${State.steps}`);
-            };
+        function calculatePace() {
+            if (State.distance < 0.005) return;
+            const paceRaw = State.elapsed / State.distance;
+            const m = Math.floor(paceRaw / 60), s = Math.floor(paceRaw % 60);
+            DOM.vPace.innerText = m > 60 ? "--:--" : `${m}:${s.toString().padStart(2, '0')}`;
+        }
 
-            // PWA Install / Widget Bindings
-            window.addEventListener('beforeinstallprompt', (e) => {
-                e.preventDefault();
-                State.deferredPrompt = e;
-                DOM.btnInstall.classList.remove('hidden'); // Tampilkan tombol install jika device support
-            });
-
-            DOM.btnInstall.onclick = async () => {
-                if (!State.deferredPrompt) return;
-                State.deferredPrompt.prompt();
-                const { outcome } = await State.deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    DOM.btnInstall.classList.add('hidden');
-                }
-                State.deferredPrompt = null;
-            };
-
-            // Service Worker Registration
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('./sw.js').catch(console.error);
+        function handleMotion(e) {
+            let raw = e.accelerationIncludingGravity;
+            if (!raw || raw.x === null) return;
+            const mag = Math.sqrt(raw.x**2 + raw.y**2 + raw.z**2);
+            State.gravity = (0.9 * State.gravity) + (0.1 * mag);
+            const linear = Math.abs(mag - State.gravity);
+            const ms = Date.now();
+            if (linear > CONFIG.THRESHOLD && (ms - State.lastStepMs) > CONFIG.COOLDOWN_MS) {
+                State.steps++; State.lastStepMs = ms; DOM.vSteps.innerText = State.steps;
             }
+        }
+
+        function persistSession() {
+            if(!State.isActive) return localStorage.removeItem('STREVA_CACHE');
+            localStorage.setItem('STREVA_CACHE', JSON.stringify({ el: State.elapsed, st: State.steps, d: State.distance, c: State.coords, p: State.isPaused }));
+        }
+
+        function restoreSession() {
+            const str = localStorage.getItem('STREVA_CACHE');
+            if (!str) return;
+            const cache = JSON.parse(str);
+            State.isActive = true; State.elapsed = cache.el; State.steps = cache.st; State.distance = cache.d; State.coords = cache.c; State.isPaused = cache.p;
+
+            DOM.vSteps.innerText = State.steps; DOM.vDist.innerText = State.distance.toFixed(2);
+            DOM.vTime.innerText = formatTimeStr(State.elapsed); calculatePace();
+
+            if(State.coords.length > 0) {
+                polyline.setLatLngs(State.coords); const lPt = State.coords[State.coords.length - 1]; map.setView(lPt, 16);
+                if (!currentMarker) currentMarker = L.circleMarker(lPt, { radius: 7, fillColor: "#fff", color: "var(--app-accent)", weight: 3 }).addTo(map);
+                else currentMarker.setLatLng(lPt);
+            }
+            DOM.btnFinish.classList.remove('opacity-40', 'pointer-events-none');
+            if(State.isPaused) {
+                DOM.iStart.classList.remove('hidden'); DOM.iPause.classList.add('hidden');
+            } else {
+                DOM.iStart.classList.add('hidden'); DOM.iPause.classList.remove('hidden');
+                window.addEventListener('devicemotion', handleMotion, true); startGPS();
+                State.timerId = setInterval(() => { State.elapsed++; DOM.vTime.innerText = formatTimeStr(State.elapsed); calculatePace(); persistSession(); }, 1000);
+            }
+        }
+
+        function toggleEngine() {
+            if(!State.isActive) {
+                State.isActive = true; State.isPaused = false; State.steps = 0; State.distance = 0; State.elapsed = 0; State.coords = [];
+                polyline.setLatLngs([]); DOM.vSteps.innerText = '0'; DOM.vDist.innerText = '0.00'; DOM.vTime.innerText = '00:00'; DOM.vPace.innerText = '--:--';
+                DOM.iStart.classList.add('hidden'); DOM.iPause.classList.remove('hidden');
+                DOM.btnFinish.classList.remove('opacity-40', 'pointer-events-none');
+                
+                window.addEventListener('devicemotion', handleMotion, true); startGPS();
+                State.timerId = setInterval(() => { State.elapsed++; DOM.vTime.innerText = formatTimeStr(State.elapsed); calculatePace(); persistSession(); }, 1000);
+            } else if(State.isActive && !State.isPaused) {
+                State.isPaused = true; DOM.iStart.classList.remove('hidden'); DOM.iPause.classList.add('hidden');
+                clearInterval(State.timerId); window.removeEventListener('devicemotion', handleMotion, true);
+                if(State.watchId) navigator.geolocation.clearWatch(State.watchId);
+                persistSession();
+            } else if(State.isActive && State.isPaused) {
+                State.isPaused = false; DOM.iStart.classList.add('hidden'); DOM.iPause.classList.remove('hidden');
+                window.addEventListener('devicemotion', handleMotion, true); startGPS();
+                State.timerId = setInterval(() => { State.elapsed++; DOM.vTime.innerText = formatTimeStr(State.elapsed); calculatePace(); persistSession(); }, 1000);
+            }
+        }
+
+        function executeFinish() {
+            if(!State.isActive) return;
+            clearInterval(State.timerId); window.removeEventListener('devicemotion', handleMotion, true);
+            if(State.watchId) navigator.geolocation.clearWatch(State.watchId);
             
-            // Cek lokasi awal
-            if ("geolocation" in navigator) navigator.geolocation.getCurrentPosition(pos => map.setView([pos.coords.latitude, pos.coords.longitude], 15), ()=>{}, {enableHighAccuracy: false});
+            saveHistoryData();
+            renderCanvasImage(State.coords, State.distance.toFixed(2), DOM.vPace.innerText, formatTimeStr(State.elapsed), State.steps);
+            DOM.mSum.classList.replace('hidden', 'flex');
+            
+            State.isActive = false; persistSession();
+            DOM.iPause.classList.add('hidden'); DOM.iStart.classList.remove('hidden');
+            DOM.btnFinish.classList.add('opacity-40', 'pointer-events-none');
+            DOM.gpsInd.innerText = "STANDBY"; DOM.gpsInd.className = "text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-0.5";
+        }
+
+        function saveHistoryData() {
+            const data = {
+                id: Date.now(), date: new Date().toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit' }),
+                steps: State.steps, distance: State.distance.toFixed(2), duration: formatTimeStr(State.elapsed), pace: DOM.vPace.innerText, coords: State.coords 
+            };
+            let hist = JSON.parse(localStorage.getItem('STREVA_HIST') || '[]');
+            hist.unshift(data); localStorage.setItem('STREVA_HIST', JSON.stringify(hist)); renderHistoryUI();
+        }
+
+        function renderHistoryUI() {
+            const hist = JSON.parse(localStorage.getItem('STREVA_HIST') || '[]');
+            if (hist.length === 0) {
+                DOM.hCont.innerHTML = `<div class="text-center text-xs opacity-50 py-6">Tidak ada aktivitas.</div>`;
+                return;
+            }
+            DOM.hCont.innerHTML = hist.map(item => `
+                <div onclick="reopenHistory(${item.id})" class="p-3 rounded-xl panel-bg border border-current flex flex-col gap-2 cursor-pointer hover:scale-[0.98] transition-transform">
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] text-accent font-black uppercase tracking-wider">${item.date}</span>
+                        <i data-lucide="download" class="w-3.5 h-3.5 opacity-60"></i>
+                    </div>
+                    <div class="grid grid-cols-4 text-center divide-x divide-current opacity-90">
+                        <div><span class="text-xs font-black block">${item.distance}</span><span class="text-[8px] opacity-60 uppercase">KM</span></div>
+                        <div><span class="text-xs font-black block">${item.steps}</span><span class="text-[8px] opacity-60 uppercase">Step</span></div>
+                        <div><span class="text-xs font-black block">${item.pace}</span><span class="text-[8px] opacity-60 uppercase">Pace</span></div>
+                        <div><span class="text-xs font-black block">${item.duration}</span><span class="text-[8px] opacity-60 uppercase">Min</span></div>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        window.reopenHistory = (id) => {
+            const hist = JSON.parse(localStorage.getItem('STREVA_HIST') || '[]'); const tgt = hist.find(h => h.id === id);
+            if(tgt) { DOM.mSet.classList.replace('flex', 'hidden'); renderCanvasImage(tgt.coords, tgt.distance, tgt.pace, tgt.duration, tgt.steps); DOM.mSum.classList.replace('hidden', 'flex'); }
+        };
+
+        function renderCanvasImage(cData, dStr, pStr, tStr, sVal) {
+            const cvs = DOM.cExp; const s = 1080; cvs.width = s; cvs.height = s; const ctx = cvs.getContext('2d');
+            ctx.fillStyle = '#09090b'; ctx.fillRect(0, 0, s, s);
+
+            if (cData && cData.length > 1) {
+                let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+                cData.forEach(c => { let x = c[1]; let y = -c[0]; if(x < minX) minX = x; if(x > maxX) maxX = x; if(y < minY) minY = y; if(y > maxY) maxY = y; });
+                const pad = 160; const scale = Math.min((s - pad*2)/(maxX - minX || 1), ((s/1.8) - pad*2)/(maxY - minY || 1));
+                const cx = (minX + maxX)/2; const cy = (minY + maxY)/2;
+
+                ctx.beginPath(); ctx.strokeStyle = '#fc4c02'; ctx.lineWidth = 20; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.shadowColor = '#fc4c02'; ctx.shadowBlur = 40;
+                cData.forEach((c, i) => { let px = s/2 + (c[1] - cx) * scale; let py = s/2.2 + (-c[0] - cy) * scale; if(i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); });
+                ctx.stroke(); ctx.shadowBlur = 0;
+            }
+
+            ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left'; ctx.font = '900 70px Inter, sans-serif'; ctx.fillText('STREVA', 80, 130);
+            ctx.fillStyle = '#fc4c02'; ctx.fillText('RUNNING', 400, 130);
+
+            const gY = 820; ctx.fillStyle = '#71717a'; ctx.font = 'bold 32px Inter, sans-serif';
+            ctx.fillText('JARAK', 80, gY); ctx.fillText('PACE', 420, gY); ctx.fillText('WAKTU', 760, gY);
+            ctx.fillStyle = '#ffffff'; ctx.font = '900 86px Inter, sans-serif';
+            ctx.fillText(`${dStr} KM`, 80, gY + 90); ctx.fillText(pStr, 420, gY + 90); ctx.fillText(tStr, 760, gY + 90);
+            ctx.fillStyle = '#fc4c02'; ctx.font = '900 48px Inter, sans-serif'; ctx.fillText(`${sVal} Langkah`, 80, gY + 180);
+        }
+
+        // --- BOOTSTRAP ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme(); initMap(); lucide.createIcons(); renderHistoryUI();
+            DOM.btnSet.onclick = () => DOM.mSet.classList.replace('hidden', 'flex');
+            DOM.btnCloseSet.onclick = () => DOM.mSet.classList.replace('flex', 'hidden');
+            DOM.btnCloseSum.onclick = () => DOM.mSum.classList.replace('flex', 'hidden');
+            DOM.inpSens.oninput = (e) => { CONFIG.THRESHOLD = parseFloat(e.target.value); DOM.lblSens.innerText = CONFIG.THRESHOLD.toFixed(1); };
+            DOM.btnToggle.onclick = toggleEngine;
+            DOM.btnFinish.onclick = executeFinish;
+            
+            DOM.btnDl.onclick = () => {
+                const a = document.createElement('a'); a.href = DOM.cExp.toDataURL('image/png'); a.download = `STREVA_RUN_${Date.now()}.png`;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            };
+
+            restoreSession();
+
+            window.addEventListener('beforeinstallprompt', (e) => { 
+                e.preventDefault(); State.deferredPrompt = e; DOM.btnInstall.classList.replace('hidden', 'flex'); 
+            });
+            DOM.btnInstall.onclick = async () => {
+                if (!State.deferredPrompt) return; State.deferredPrompt.prompt();
+                const { outcome } = await State.deferredPrompt.userChoice;
+                if (outcome === 'accepted') DOM.btnInstall.classList.replace('flex', 'hidden'); State.deferredPrompt = null;
+            };
+
+            if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
         });
     </script>
 </body>
