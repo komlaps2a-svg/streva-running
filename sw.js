@@ -1,4 +1,4 @@
-const CACHE_NAME = 'streva-prod-v2';
+const CACHE_NAME = 'streva-prod-v5';
 const ASSETS = [
     './',
     './index.html',
@@ -26,7 +26,7 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(
         caches.match(e.request).then((res) => {
             return res || fetch(e.request).then((netRes) => {
-                if (e.request.url.includes('basemaps.cartocdn.com')) return netRes; // Jangan cache tiles map dynamis
+                if (e.request.url.includes('basemaps.cartocdn.com')) return netRes; 
                 return caches.open(CACHE_NAME).then((c) => { c.put(e.request, netRes.clone()); return netRes; });
             });
         })
