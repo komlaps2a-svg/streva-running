@@ -1,5 +1,5 @@
-const CACHE_NAME = 'tracker-core-v1';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = 'strava-clone-v2';
+const CORE_ASSETS = [
     './',
     './index.html',
     './manifest.json',
@@ -9,21 +9,19 @@ const ASSETS_TO_CACHE = [
     'https://unpkg.com/lucide@latest'
 ];
 
-// Instalasi & Caching Strategi Agresif
 self.addEventListener('install', (event) => {
     self.skipWaiting();
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
+        caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS))
     );
 });
 
-// Pembersihan Memori Lintas-Versi
 self.addEventListener('activate', (event) => {
     event.waitUntil(
-        caches.keys().then((cacheNames) => {
+        caches.keys().then((keys) => {
             return Promise.all(
-                cacheNames.map((name) => {
-                    if (name !== CACHE_NAME) return caches.delete(name);
+                keys.map((key) => {
+                    if (key !== CACHE_NAME) return caches.delete(key);
                 })
             );
         })
@@ -31,34 +29,23 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
-// Interseptor Jaringan (Network First, Fallback to Cache)
+// Cache First Strategy untuk Aset Statis, Network Fallback
 self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
     
     event.respondWith(
-        fetch(event.request).catch(() => caches.match(event.request))
-    );
-});
-
-/**
- * LOGIKA SINKRONISASI WIDGET / BACKGROUND BADGE
- * Mendengarkan emisi dari index.html melalui BroadcastChannel.
- * Karena PWA tidak memiliki Widget Layar Utama interaktif murni di iOS/Android tanpa Wrapper, 
- * angka langkah dieksekusi ke App Badge (notifikasi angka merah di atas ikon aplikasi).
- */
-const widgetChannel = new BroadcastChannel('pwa-widget-sync');
-
-widgetChannel.addEventListener('message', (event) => {
-    if (event.data && event.data.type === 'SYNC_STATE') {
-        const payload = event.data.payload;
-        
-        // Eksekusi App Badge API (Didukung di Chromium 81+ dan iOS 16.4+)
-        if ('setAppBadge' in navigator) {
-            // Membatasi angka badge maksimal 9999 agar tidak merusak UI OS
-            const displaySteps = payload.steps > 9999 ? 9999 : payload.steps;
-            navigator.setAppBadge(displaySteps).catch(error => {
-                console.error('[SW] Mutasi App Badge Gagal:', error);
+        caches.match(event.request).then((cachedResponse) => {
+            if (cachedResponse) return cachedResponse;
+            return fetch(event.request).then((response) => {
+                // Jangan cache request ke domain luar selain API yang didefinisikan
+                if (!event.request.url.startsWith(self.location.origin)) {
+                    return response;
+                }
+                return caches.open(CACHE_NAME).then((cache) => {
+                    cache.put(event.request, response.clone());
+                    return response;
+                });
             });
-        }
-    }
+        })
+    );
 });
