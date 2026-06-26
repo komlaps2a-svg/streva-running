@@ -1,7 +1,7 @@
 {
   "name": "STREVA RUNNING",
   "short_name": "STREVA",
-  "description": "Aplikasi Pelacak Lari Offline-First",
+  "description": "Production-Grade Tracker App. Offline-capable GPS & Pedometer.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#09090b",
@@ -17,8 +17,8 @@
   ],
   "widgets": [
     {
-      "name": "STREVA Dashboard",
-      "description": "Widget Metrik Berlari 2x2",
+      "name": "STREVA Dashboard Grid",
+      "description": "Metrik 2x2 Dasbor Berjalan",
       "tag": "streva-dashboard-2x2",
       "ms_ac_holographic_extension": {
           "default_size": "2x2"
