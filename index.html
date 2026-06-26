@@ -42,7 +42,7 @@
         
         #map-wrapper { 
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
-            height: 240px; 
+            height: 200px; 
             border-radius: 24px; 
             overflow: hidden; 
             position: relative; 
@@ -104,8 +104,8 @@
         </button>
     </header>
 
-    <main class="w-full max-w-md mx-auto flex flex-col gap-4 px-4 pb-4 flex-1 overflow-y-auto z-10 relative">
-        <div id="map-wrapper" class="shadow-xl border border-[rgba(255,255,255,0.1)]">
+    <main class="w-full max-w-md mx-auto flex flex-col gap-3 px-4 pb-4 flex-1 overflow-y-auto z-10 relative">
+        <div id="map-wrapper" class="shadow-xl border border-[rgba(255,255,255,0.1)] shrink-0">
             <div id="map-container"></div>
             <button id="btn-close-map" class="absolute top-16 right-4 z-[10000] w-12 h-12 rounded-full bg-black/90 border border-white/20 hidden items-center justify-center text-white active:scale-95 shadow-2xl backdrop-blur-md">
                 <i data-lucide="x" class="w-6 h-6"></i>
@@ -115,26 +115,34 @@
             </div>
         </div>
 
-        <div class="panel-bg rounded-[32px] p-6 flex flex-col items-center justify-center min-h-[160px] shadow-lg border-t border-white/10 shrink-0">
-            <span class="text-[11px] font-bold opacity-50 uppercase tracking-[0.3em] mb-1">Total Langkah</span>
-            <span id="val-steps" class="text-[5.5rem] leading-none font-black tracking-tighter text-accent drop-shadow-md transition-colors">0</span>
-        </div>
+        <div class="grid grid-cols-2 gap-3 w-full shrink-0 flex-1 content-start">
+            <div class="panel-bg rounded-[28px] p-5 flex flex-col items-center justify-center shadow-lg border border-[rgba(255,255,255,0.05)] aspect-[4/3]">
+                <span class="text-[10px] font-bold opacity-60 uppercase tracking-[0.2em] mb-1 text-center">Langkah</span>
+                <span id="val-steps" class="text-5xl leading-none font-black tracking-tighter text-accent drop-shadow-md transition-colors mt-1">0</span>
+            </div>
+            
+            <div class="panel-bg rounded-[28px] p-5 flex flex-col items-center justify-center shadow-lg border border-[rgba(255,255,255,0.05)] aspect-[4/3]">
+                <span class="text-[10px] font-bold opacity-60 uppercase tracking-[0.2em] mb-1 text-center">Jarak</span>
+                <div class="flex items-baseline gap-1 mt-1">
+                    <span id="val-dist" class="text-4xl leading-none font-black font-mono">0.00</span>
+                    <span class="text-[10px] opacity-60 font-bold uppercase">KM</span>
+                </div>
+            </div>
 
-        <div class="grid grid-cols-3 gap-3 w-full shrink-0">
-            <div class="panel-bg rounded-2xl p-4 text-center">
-                <span class="text-[10px] font-bold opacity-50 uppercase tracking-widest block mb-1">Jarak</span>
-                <span id="val-dist" class="text-2xl font-black font-mono">0.00</span>
-                <span class="text-[10px] opacity-50 font-medium block mt-0.5">KM</span>
+            <div class="panel-bg rounded-[28px] p-5 flex flex-col items-center justify-center shadow-lg border border-[rgba(255,255,255,0.05)] aspect-[4/3]">
+                <span class="text-[10px] font-bold opacity-60 uppercase tracking-[0.2em] mb-1 text-center">Pace</span>
+                <div class="flex items-baseline gap-1 mt-1">
+                    <span id="val-pace" class="text-4xl leading-none font-black font-mono text-accent transition-colors">-:-</span>
+                    <span class="text-[10px] opacity-60 font-bold uppercase">/KM</span>
+                </div>
             </div>
-            <div class="panel-bg rounded-2xl p-4 text-center">
-                <span class="text-[10px] font-bold opacity-50 uppercase tracking-widest block mb-1">Pace</span>
-                <span id="val-pace" class="text-2xl font-black font-mono text-accent transition-colors">--:--</span>
-                <span class="text-[10px] opacity-50 font-medium block mt-0.5">/KM</span>
-            </div>
-            <div class="panel-bg rounded-2xl p-4 text-center">
-                <span class="text-[10px] font-bold opacity-50 uppercase tracking-widest block mb-1">Waktu</span>
-                <span id="val-time" class="text-2xl font-black font-mono">00:00</span>
-                <span class="text-[10px] opacity-50 font-medium block mt-0.5">MIN</span>
+
+            <div class="panel-bg rounded-[28px] p-5 flex flex-col items-center justify-center shadow-lg border border-[rgba(255,255,255,0.05)] aspect-[4/3]">
+                <span class="text-[10px] font-bold opacity-60 uppercase tracking-[0.2em] mb-1 text-center">Waktu</span>
+                <div class="flex items-baseline gap-1 mt-1">
+                    <span id="val-time" class="text-4xl leading-none font-black font-mono">00:00</span>
+                    <span class="text-[10px] opacity-60 font-bold uppercase">MIN</span>
+                </div>
             </div>
         </div>
     </main>
@@ -152,7 +160,6 @@
         </div>
     </footer>
 
-    <!-- MODAL SETTINGS -->
     <div id="modal-settings" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[99999] hidden items-center justify-center p-4">
         <div class="w-full max-w-md bg-[var(--app-bg)] rounded-[32px] p-6 max-h-[90dvh] overflow-y-auto modal-pop shadow-2xl border border-[rgba(255,255,255,0.1)]" id="settings-content">
             <div class="flex justify-between items-center mb-6">
@@ -161,7 +168,6 @@
             </div>
             
             <div class="space-y-5">
-                <!-- UI THEME -->
                 <div class="p-5 rounded-[24px] panel-bg shadow-sm">
                     <div class="flex items-center gap-2 mb-4 opacity-80">
                         <i data-lucide="palette" class="w-4 h-4"></i>
@@ -197,7 +203,6 @@
                     </div>
                 </div>
 
-                <!-- EXPORT THEME -->
                 <div class="p-5 rounded-[24px] panel-bg shadow-sm">
                     <div class="flex items-center gap-2 mb-4 opacity-80">
                         <i data-lucide="image" class="w-4 h-4"></i>
@@ -209,7 +214,6 @@
                     </div>
                 </div>
 
-                <!-- SENSOR -->
                 <div class="p-5 rounded-[24px] panel-bg shadow-sm">
                     <div class="flex items-center gap-2 mb-4 opacity-80">
                         <i data-lucide="zap" class="w-4 h-4"></i>
@@ -226,7 +230,6 @@
                     <i data-lucide="layout-grid" class="w-5 h-5"></i> Tambah Ke Layar Utama
                 </button>
 
-                <!-- RIWAYAT -->
                 <div>
                     <div class="flex justify-between items-center mb-3 px-1">
                         <span class="text-[11px] font-bold opacity-50 uppercase tracking-widest">Riwayat Tracking</span>
@@ -271,9 +274,13 @@
 
     <script>
         const CONFIG = { THRESHOLD: 2.5, COOLDOWN_MS: 350, MIN_ACCURACY: 45 };
+        
+        // INJEKSI VARIABEL RETENSI PACE (bestPaceRaw & bestPaceStr)
         const State = {
             isActive: false, isPaused: false, elapsed: 0, steps: 0, distance: 0,
-            gravity: 9.81, lastStepMs: 0, coords: [], watchId: null, timerId: null, deferredPrompt: null
+            gravity: 9.81, lastStepMs: 0, coords: [], watchId: null, timerId: null, deferredPrompt: null,
+            currentGpsSpeed: null, paceBuffer: [],
+            bestPaceRaw: Infinity, bestPaceStr: "--:--"
         };
 
         const DOM = {
@@ -412,6 +419,8 @@
                     if (pos.coords.accuracy > CONFIG.MIN_ACCURACY) return;
                     DOM.gpsInd.innerText = "GPS AKTIF"; DOM.gpsInd.className = "text-[10px] text-green-500 font-bold uppercase tracking-wider mt-0.5";
                     
+                    State.currentGpsSpeed = pos.coords.speed;
+                    
                     const pt = [pos.coords.latitude, pos.coords.longitude];
                     
                     if (State.coords.length > 0) {
@@ -443,14 +452,56 @@
             return `${m}m ${sec}d`;
         }
 
+        // LOGIKA PACE DIREKAYASA: Rekam & Tahan Pace Tercepat (Paling Laju) saat diam
         function calculatePace() {
-            if (State.distance < 0.005) { DOM.vPace.innerText = "--:--"; return; }
-            const paceRaw = State.elapsed / State.distance;
-            const m = Math.floor(paceRaw / 60), s = Math.floor(paceRaw % 60);
-            DOM.vPace.innerText = m > 60 ? "--:--" : `${m}:${s.toString().padStart(2, '0')}`;
+            const secSinceLastStep = (Date.now() - State.lastStepMs) / 1000;
+            if (secSinceLastStep > 3.0) {
+                State.paceBuffer = [];
+            }
+
+            let currentActivePaceStr = null;
+            let currentActivePaceSec = Infinity;
+
+            if (State.paceBuffer && State.paceBuffer.length > 0) {
+                const avgPaceSec = State.paceBuffer.reduce((a,b) => a+b, 0) / State.paceBuffer.length;
+                if (avgPaceSec < 3599) {
+                    currentActivePaceSec = avgPaceSec;
+                    const m = Math.floor(avgPaceSec / 60);
+                    const s = Math.floor(avgPaceSec % 60);
+                    currentActivePaceStr = `${m}:${s.toString().padStart(2, '0')}`;
+                }
+            } else if (State.currentGpsSpeed && State.currentGpsSpeed > 0.2) {
+                const paceMinKm = 60 / (State.currentGpsSpeed * 3.6);
+                if (paceMinKm < 60) {
+                    currentActivePaceSec = paceMinKm * 60;
+                    const m = Math.floor(paceMinKm); 
+                    const s = Math.floor((paceMinKm - m) * 60);
+                    currentActivePaceStr = `${m}:${s.toString().padStart(2, '0')}`;
+                }
+            }
+
+            if (currentActivePaceStr) {
+                DOM.vPace.innerText = currentActivePaceStr;
+                // Cek & Simpan jika ini adalah pace yang paling laju
+                if (currentActivePaceSec < State.bestPaceRaw) {
+                    State.bestPaceRaw = currentActivePaceSec;
+                    State.bestPaceStr = currentActivePaceStr;
+                }
+            } else {
+                // Jika sedang tidak berjalan/berlari, TAHAN UI pada angka Paling Laju yang pernah dicapai
+                if (State.bestPaceStr !== "--:--") {
+                    DOM.vPace.innerText = State.bestPaceStr;
+                } else {
+                    // Fallback murni jika belum pernah laju sama sekali
+                    if (State.distance < 0.01) { DOM.vPace.innerText = "--:--"; return; }
+                    const paceRaw = State.elapsed / State.distance;
+                    if (paceRaw > 3599) { DOM.vPace.innerText = "--:--"; return; }
+                    const m = Math.floor(paceRaw / 60), s = Math.floor(paceRaw % 60);
+                    DOM.vPace.innerText = `${m}:${s.toString().padStart(2, '0')}`;
+                }
+            }
         }
         
-        // FUNGSI INJEKSI ABSOLUT UNTUK MENGAMANKAN PACE RATA-RATA SAAT WAKTU STOP
         function getFinalAveragePace() {
             if (State.distance < 0.005) return "--:--";
             const paceRaw = State.elapsed / State.distance;
@@ -468,7 +519,18 @@
             const ms = Date.now();
             
             if (linear > CONFIG.THRESHOLD && (ms - State.lastStepMs) > CONFIG.COOLDOWN_MS) {
-                State.steps++; State.lastStepMs = ms; DOM.vSteps.innerText = State.steps;
+                const timeDiff = (ms - State.lastStepMs) / 1000;
+                State.steps++; 
+                State.lastStepMs = ms; 
+                DOM.vSteps.innerText = State.steps;
+
+                if(timeDiff > 0.3 && timeDiff < 2.0) { 
+                    const instantPaceSec = timeDiff * 1312;
+                    State.paceBuffer.push(instantPaceSec);
+                    if(State.paceBuffer.length > 5) State.paceBuffer.shift(); 
+                } else {
+                    State.paceBuffer = [];
+                }
             }
         }
 
@@ -478,7 +540,8 @@
                 return;
             }
             localStorage.setItem('STREVA_CACHE', JSON.stringify({
-                el: State.elapsed, st: State.steps, d: State.distance, c: State.coords, p: State.isPaused
+                el: State.elapsed, st: State.steps, d: State.distance, c: State.coords, p: State.isPaused,
+                bpR: State.bestPaceRaw, bpS: State.bestPaceStr // Simpan state pace paling laju
             }));
         }
 
@@ -489,6 +552,8 @@
             
             State.isActive = true; State.elapsed = cache.el; State.steps = cache.st;
             State.distance = cache.d; State.coords = cache.c; State.isPaused = cache.p;
+            State.bestPaceRaw = cache.bpR || Infinity;
+            State.bestPaceStr = cache.bpS || "--:--";
 
             DOM.vSteps.innerText = State.steps; DOM.vDist.innerText = State.distance.toFixed(2);
             DOM.vTime.innerText = formatTimeStr(State.elapsed); calculatePace();
@@ -518,7 +583,9 @@
 
         function toggleEngine() {
             if(!State.isActive) {
-                State.isActive = true; State.isPaused = false; State.steps = 0; State.distance = 0; State.elapsed = 0; State.coords = [];
+                // RESET
+                State.isActive = true; State.isPaused = false; State.steps = 0; State.distance = 0; State.elapsed = 0; 
+                State.coords = []; State.paceBuffer = []; State.bestPaceRaw = Infinity; State.bestPaceStr = "--:--";
                 polyline.setLatLngs([]); 
                 DOM.vSteps.innerText = '0'; DOM.vDist.innerText = '0.00'; DOM.vTime.innerText = '00:00'; DOM.vPace.innerText = '--:--';
                 
@@ -540,7 +607,7 @@
                 persistSession();
             
             } else if(State.isActive && State.isPaused) {
-                State.isPaused = false; 
+                State.isPaused = false; State.paceBuffer = [];
                 DOM.iStart.classList.add('hidden'); DOM.iPause.classList.remove('hidden');
                 window.addEventListener('devicemotion', handleMotion, true);
                 startGPS();
@@ -558,12 +625,12 @@
             window.removeEventListener('devicemotion', handleMotion, true);
             if(State.watchId) navigator.geolocation.clearWatch(State.watchId);
             
-            // Kalkulasi Average Pace Mutlak di detik terakhir
-            const finalAvgPace = getFinalAveragePace();
+            // GUNAKAN PACE PALING LAJU (BEST PACE) UNTUK DI EKSPOR SESUAI REQUEST
+            const exportedPace = State.bestPaceStr !== "--:--" ? State.bestPaceStr : getFinalAveragePace();
             
-            saveHistoryData(finalAvgPace);
+            saveHistoryData(exportedPace);
             
-            let paceForExport = finalAvgPace;
+            let paceForExport = exportedPace;
             if(paceForExport !== "--:--") paceForExport += " /km";
 
             renderCanvasImage(State.coords, State.distance.toFixed(2), paceForExport, formatTimeExport(State.elapsed));
@@ -575,12 +642,12 @@
             DOM.gpsInd.innerText = "STANDBY"; DOM.gpsInd.className = "text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-0.5";
         }
 
-        function saveHistoryData(avgPace) {
+        function saveHistoryData(exportPaceStr) {
             const data = {
                 id: Date.now(), 
                 date: new Date().toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit' }),
                 steps: State.steps, distance: State.distance.toFixed(2), elapsed: State.elapsed,
-                durationUI: formatTimeStr(State.elapsed), pace: avgPace, coords: State.coords 
+                durationUI: formatTimeStr(State.elapsed), pace: exportPaceStr, coords: State.coords 
             };
             let hist = JSON.parse(localStorage.getItem('STREVA_HIST') || '[]');
             hist.unshift(data); localStorage.setItem('STREVA_HIST', JSON.stringify(hist)); renderHistoryUI();
