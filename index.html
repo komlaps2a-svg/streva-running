@@ -28,9 +28,10 @@
             font-family: 'Inter', -apple-system, sans-serif; 
             background-color: var(--app-bg);
             color: var(--app-text);
-            transition: background-color 0.3s ease, color 0.3s ease;
+            transition: background-color 0.4s ease, color 0.4s ease;
         }
 
+        /* Utility Kustom */
         .bg-accent { background-color: var(--app-accent) !important; }
         .text-accent { color: var(--app-accent) !important; }
         .border-accent { border-color: var(--app-accent) !important; }
@@ -40,50 +41,78 @@
             backdrop-filter: blur(16px); 
         }
         
+        /* Anti-Jitter untuk Angka */
+        .font-mono { font-variant-numeric: tabular-nums; }
+
         #map-wrapper { 
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
-            height: 200px; 
-            border-radius: 24px; 
-            overflow: hidden; 
-            position: relative; 
-            cursor: pointer;
-            z-index: 10;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-radius 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
+            height: 200px; border-radius: 24px; overflow: hidden; position: relative; cursor: pointer; z-index: 10;
         }
         
         #map-wrapper.fullscreen-mode { 
-            position: fixed !important; 
-            top: 0 !important; 
-            left: 0 !important; 
-            width: 100vw !important; 
-            height: 100dvh !important; 
-            border-radius: 0 !important; 
-            z-index: 9999 !important; 
-            cursor: default !important;
+            position: fixed !important; top: 0 !important; left: 0 !important; 
+            width: 100vw !important; height: 100dvh !important; border-radius: 0 !important; 
+            z-index: 9999 !important; cursor: default !important;
         }
 
         #map-container { width: 100%; height: 100%; }
         .leaflet-control-attribution, .leaflet-control-zoom { display: none !important; }
         
+        /* Native UI Overrides */
         input[type="color"] { -webkit-appearance: none; border: none; padding: 0; outline: none; background: transparent; }
         input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
         input[type="color"]::-webkit-color-swatch { border: none; border-radius: 100%; }
 
         .custom-slider { -webkit-appearance: none; appearance: none; background: transparent; }
         .custom-slider::-webkit-slider-runnable-track { width: 100%; height: 6px; background: rgba(150,150,150,0.3); border-radius: 4px; }
-        .custom-slider::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: var(--app-accent); margin-top: -7px; box-shadow: 0 2px 6px rgba(0,0,0,0.5); cursor: pointer; border: 2px solid white; transition: transform 0.1s; }
-        .custom-slider::-webkit-slider-thumb:active { transform: scale(1.2); }
+        .custom-slider::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: var(--app-accent); margin-top: -7px; box-shadow: 0 2px 6px rgba(0,0,0,0.5); cursor: pointer; border: 2px solid white; transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+        .custom-slider::-webkit-slider-thumb:active { transform: scale(1.3); }
 
-        .modal-pop { animation: pop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        @keyframes pop { 0% { opacity: 0; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
+        /* Animasi Profesional Mutakhir */
+        .modal-pop { animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes modalPop { 
+            0% { opacity: 0; transform: scale(0.92) translateY(10px); } 
+            100% { opacity: 1; transform: scale(1) translateY(0); } 
+        }
         
+        /* Progressive Rendering Stagger */
+        .stagger-item { opacity: 0; transform: translateY(15px); transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        .app-loaded .stagger-item { opacity: 1; transform: translateY(0); }
+        .delay-1 { transition-delay: 50ms; }
+        .delay-2 { transition-delay: 100ms; }
+        .delay-3 { transition-delay: 150ms; }
+        .delay-4 { transition-delay: 200ms; }
+
+        /* Splash Screen */
+        #splash-screen { transition: opacity 0.5s ease-out; }
+        .app-loaded #splash-screen { opacity: 0; pointer-events: none; }
+
         button, a, input, select { pointer-events: auto; outline: none; }
-        .tab-active { background: var(--app-accent) !important; color: white !important; shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .tab-active { background: var(--app-accent) !important; color: white !important; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .tab-inactive { background: transparent; opacity: 0.5; }
     </style>
 </head>
 <body class="antialiased h-[100dvh] flex flex-col overflow-hidden">
 
-    <header class="w-full max-w-md mx-auto flex justify-between items-center p-4 pt-safe shrink-0 z-20">
+    <div id="splash-screen" class="fixed inset-0 z-[999999] bg-[#09090b] flex flex-col items-center justify-center">
+        <div class="flex flex-col items-center gap-5">
+            <div class="w-20 h-20 rounded-[20px] bg-gradient-to-br from-[#fc4c02] via-white to-[#fc4c02] p-[2px] shadow-[0_10px_30px_rgba(252,76,2,0.3)] animate-bounce" style="animation-duration: 2s;">
+                <div class="w-full h-full bg-[#fc4c02] rounded-[18px] flex items-center justify-center relative overflow-hidden">
+                    <svg viewBox="0 0 24 24" class="w-12 h-12 text-white absolute" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 12h4M4 16h3M3 8h2" class="opacity-60" stroke-width="2.5"/>
+                        <circle cx="15.5" cy="5.5" r="1.5" fill="currentColor" stroke="none" />
+                        <path d="M15.5 7.5l-2 4.5-3 1 M13.5 12l1 5 3 2 M10.5 13l-2 4 1 3 M15.5 7.5h3l2 2 M15.5 7.5l-3-2-2 3" stroke-width="2"/>
+                    </svg>
+                </div>
+            </div>
+            <h1 class="font-black text-3xl uppercase tracking-[0.2em] text-white">STREVA</h1>
+            <div class="w-32 h-1 bg-white/10 rounded-full mt-4 overflow-hidden">
+                <div class="h-full bg-[#fc4c02] rounded-full w-1/2 animate-pulse"></div>
+            </div>
+        </div>
+    </div>
+
+    <header class="stagger-item delay-1 w-full max-w-md mx-auto flex justify-between items-center p-4 pt-safe shrink-0 z-20">
         <div class="flex items-center gap-3">
             <div class="w-[46px] h-[46px] rounded-[14px] bg-gradient-to-br from-[#fc4c02] via-white to-[#fc4c02] p-[2px] shadow-[0_4px_12px_rgba(0,0,0,0.3)] transition-all">
                 <div class="w-full h-full bg-accent rounded-[12px] flex items-center justify-center overflow-hidden relative">
@@ -99,15 +128,15 @@
                 <span id="gps-indicator" class="text-[10px] text-red-500 font-bold uppercase tracking-wider mt-0.5">GPS OFF</span>
             </div>
         </div>
-        <button id="btn-settings" class="w-11 h-11 rounded-full panel-bg border border-[rgba(255,255,255,0.1)] flex items-center justify-center shadow-lg active:scale-95 transition-transform shrink-0 z-30 relative">
+        <button id="btn-settings" class="w-11 h-11 rounded-full panel-bg border border-[rgba(255,255,255,0.1)] flex items-center justify-center shadow-lg active:scale-90 transition-transform shrink-0 z-30 relative duration-300">
             <i data-lucide="settings" class="w-5 h-5 opacity-90"></i>
         </button>
     </header>
 
     <main class="w-full max-w-md mx-auto flex flex-col gap-3 px-4 pb-4 flex-1 overflow-y-auto z-10 relative">
-        <div id="map-wrapper" class="shadow-xl border border-[rgba(255,255,255,0.1)] shrink-0">
+        <div id="map-wrapper" class="stagger-item delay-2 shadow-xl border border-[rgba(255,255,255,0.1)] shrink-0">
             <div id="map-container"></div>
-            <button id="btn-close-map" class="absolute top-16 right-4 z-[10000] w-12 h-12 rounded-full bg-black/90 border border-white/20 hidden items-center justify-center text-white active:scale-95 shadow-2xl backdrop-blur-md">
+            <button id="btn-close-map" class="absolute top-16 right-4 z-[10000] w-12 h-12 rounded-full bg-black/90 border border-white/20 hidden items-center justify-center text-white active:scale-90 transition-transform shadow-2xl backdrop-blur-md">
                 <i data-lucide="x" class="w-6 h-6"></i>
             </button>
             <div id="map-hint" class="absolute bottom-4 left-1/2 -translate-x-1/2 z-[30] px-4 py-1.5 rounded-full bg-black/70 text-[10px] text-white font-bold tracking-wider pointer-events-none backdrop-blur-md">
@@ -116,58 +145,102 @@
         </div>
 
         <div class="grid grid-cols-2 gap-3 w-full shrink-0 flex-1 content-start">
-            <div class="panel-bg rounded-[28px] p-5 flex flex-col items-center justify-center shadow-lg border border-[rgba(255,255,255,0.05)] aspect-[4/3]">
+            <div class="stagger-item delay-3 panel-bg rounded-[28px] p-5 flex flex-col items-center justify-center shadow-lg border border-[rgba(255,255,255,0.05)] aspect-[4/3] transition-colors duration-300">
                 <span class="text-[10px] font-bold opacity-60 uppercase tracking-[0.2em] mb-1 text-center">Langkah</span>
-                <span id="val-steps" class="text-5xl leading-none font-black tracking-tighter text-accent drop-shadow-md transition-colors mt-1">0</span>
+                <span id="val-steps" class="text-5xl leading-none font-black tracking-tighter text-accent drop-shadow-md transition-all duration-200 mt-1">0</span>
             </div>
             
-            <div class="panel-bg rounded-[28px] p-5 flex flex-col items-center justify-center shadow-lg border border-[rgba(255,255,255,0.05)] aspect-[4/3]">
+            <div class="stagger-item delay-3 panel-bg rounded-[28px] p-5 flex flex-col items-center justify-center shadow-lg border border-[rgba(255,255,255,0.05)] aspect-[4/3] transition-colors duration-300">
                 <span class="text-[10px] font-bold opacity-60 uppercase tracking-[0.2em] mb-1 text-center">Jarak</span>
                 <div class="flex items-baseline gap-1 mt-1">
-                    <span id="val-dist" class="text-4xl leading-none font-black font-mono">0.00</span>
+                    <span id="val-dist" class="text-4xl leading-none font-black font-mono transition-all duration-200">0.00</span>
                     <span class="text-[10px] opacity-60 font-bold uppercase">KM</span>
                 </div>
             </div>
 
-            <div class="panel-bg rounded-[28px] p-5 flex flex-col items-center justify-center shadow-lg border border-[rgba(255,255,255,0.05)] aspect-[4/3]">
+            <div class="stagger-item delay-4 panel-bg rounded-[28px] p-5 flex flex-col items-center justify-center shadow-lg border border-[rgba(255,255,255,0.05)] aspect-[4/3] transition-colors duration-300">
                 <span class="text-[10px] font-bold opacity-60 uppercase tracking-[0.2em] mb-1 text-center">Pace</span>
                 <div class="flex items-baseline gap-1 mt-1">
-                    <span id="val-pace" class="text-4xl leading-none font-black font-mono text-accent transition-colors">-:-</span>
+                    <span id="val-pace" class="text-3xl leading-none font-black font-mono text-accent transition-all duration-200 whitespace-nowrap tracking-tighter">--:--</span>
                     <span class="text-[10px] opacity-60 font-bold uppercase">/KM</span>
                 </div>
             </div>
 
-            <div class="panel-bg rounded-[28px] p-5 flex flex-col items-center justify-center shadow-lg border border-[rgba(255,255,255,0.05)] aspect-[4/3]">
+            <div class="stagger-item delay-4 panel-bg rounded-[28px] p-5 flex flex-col items-center justify-center shadow-lg border border-[rgba(255,255,255,0.05)] aspect-[4/3] transition-colors duration-300">
                 <span class="text-[10px] font-bold opacity-60 uppercase tracking-[0.2em] mb-1 text-center">Waktu</span>
                 <div class="flex items-baseline gap-1 mt-1">
-                    <span id="val-time" class="text-4xl leading-none font-black font-mono">00:00</span>
+                    <span id="val-time" class="text-4xl leading-none font-black font-mono transition-all duration-200">00:00</span>
                     <span class="text-[10px] opacity-60 font-bold uppercase">MIN</span>
                 </div>
             </div>
         </div>
     </main>
 
-    <footer class="w-full max-w-md mx-auto p-4 shrink-0 z-30 pb-safe relative">
-        <div class="panel-bg rounded-[40px] p-3 flex items-center justify-between px-6 shadow-2xl border border-[rgba(255,255,255,0.1)] relative z-30">
+    <footer class="stagger-item delay-4 w-full max-w-md mx-auto p-4 shrink-0 z-30 pb-safe relative">
+        <div class="panel-bg rounded-[40px] p-3 flex items-center justify-between px-6 shadow-2xl border border-[rgba(255,255,255,0.1)] relative z-30 transition-colors duration-300">
             <div class="w-14"></div> 
-            <button id="btn-toggle" class="w-20 h-20 bg-accent rounded-full flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.4)] transition-all active:scale-90 relative z-[50]">
-                <i id="icon-start" data-lucide="play" class="w-10 h-10 text-white fill-current ml-2"></i>
-                <i id="icon-pause" data-lucide="pause" class="w-10 h-10 text-white fill-current hidden"></i>
+            <button id="btn-toggle" class="w-20 h-20 bg-accent rounded-full flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.4)] transition-all active:scale-90 relative z-[50] duration-300">
+                <i id="icon-start" data-lucide="play" class="w-10 h-10 text-white fill-current ml-2 transition-transform"></i>
+                <i id="icon-pause" data-lucide="pause" class="w-10 h-10 text-white fill-current hidden transition-transform"></i>
             </button>
-            <button id="btn-finish" class="w-14 h-14 rounded-full bg-red-500/10 text-red-500 border border-red-500/30 flex items-center justify-center transition-all opacity-40 pointer-events-none active:scale-95 relative z-[50]">
+            <button id="btn-finish" class="w-14 h-14 rounded-full bg-red-500/10 text-red-500 border border-red-500/30 flex items-center justify-center transition-all opacity-40 pointer-events-none active:scale-90 relative z-[50] duration-300">
                 <i data-lucide="square" class="w-6 h-6 fill-current"></i>
             </button>
         </div>
     </footer>
 
-    <div id="modal-settings" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[99999] hidden items-center justify-center p-4">
+    <div id="modal-settings" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[99999] hidden items-center justify-center p-4 transition-opacity">
         <div class="w-full max-w-md bg-[var(--app-bg)] rounded-[32px] p-6 max-h-[90dvh] overflow-y-auto modal-pop shadow-2xl border border-[rgba(255,255,255,0.1)]" id="settings-content">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-black uppercase tracking-tight">Pengaturan</h2>
-                <button id="btn-close-settings" class="p-2 rounded-full panel-bg z-50 border border-[rgba(255,255,255,0.1)]"><i data-lucide="x" class="w-5 h-5 opacity-80"></i></button>
+                <button id="btn-close-settings" class="p-2 rounded-full panel-bg z-50 border border-[rgba(255,255,255,0.1)] active:scale-90 transition-transform"><i data-lucide="x" class="w-5 h-5 opacity-80"></i></button>
             </div>
             
             <div class="space-y-5">
+                
+                <div class="p-5 rounded-[24px] panel-bg shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2 opacity-80">
+                            <i data-lucide="layout-template" class="w-4 h-4"></i>
+                            <span class="text-[11px] font-bold uppercase tracking-widest">Tambah Widget</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col gap-3">
+                        <div class="flex items-center justify-between p-3 rounded-2xl bg-[rgba(150,150,150,0.1)] border border-[rgba(255,255,255,0.05)]">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-[14px] bg-white flex flex-col items-center justify-center relative overflow-hidden shadow-sm">
+                                    <div class="absolute top-1 right-1"><i data-lucide="refresh-cw" class="w-2.5 h-2.5 text-accent"></i></div>
+                                    <i data-lucide="activity" class="w-5 h-5 text-black"></i>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold block opacity-90">Widget Langkah</span>
+                                    <span class="text-[10px] opacity-50 font-medium">Kecil (1x1)</span>
+                                </div>
+                            </div>
+                            <button class="btn-install-pwa px-4 py-2 rounded-xl bg-accent text-white font-bold text-[10px] uppercase shadow-md active:scale-90 transition-transform">Tambah</button>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-3 rounded-2xl bg-[rgba(150,150,150,0.1)] border border-[rgba(255,255,255,0.05)]">
+                            <div class="flex items-center gap-3">
+                                <div class="w-14 h-12 rounded-[14px] bg-white flex items-end justify-center p-2 relative overflow-hidden shadow-sm">
+                                    <div class="absolute top-1 right-1"><i data-lucide="refresh-cw" class="w-2.5 h-2.5 text-accent"></i></div>
+                                    <div class="flex gap-1 items-end h-5">
+                                        <div class="w-1.5 bg-accent rounded-full h-full"></div>
+                                        <div class="w-1.5 bg-accent rounded-full h-3/4"></div>
+                                        <div class="w-1.5 bg-[rgba(150,150,150,0.3)] rounded-full h-1/2"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold block opacity-90">Widget Dasbor</span>
+                                    <span class="text-[10px] opacity-50 font-medium">Sedang (2x2)</span>
+                                </div>
+                            </div>
+                            <button class="btn-install-pwa px-4 py-2 rounded-xl bg-accent text-white font-bold text-[10px] uppercase shadow-md active:scale-90 transition-transform">Tambah</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="p-5 rounded-[24px] panel-bg shadow-sm">
                     <div class="flex items-center gap-2 mb-4 opacity-80">
                         <i data-lucide="palette" class="w-4 h-4"></i>
@@ -175,8 +248,8 @@
                     </div>
 
                     <div class="flex bg-[rgba(150,150,150,0.1)] rounded-xl p-1 mb-5 border border-[rgba(255,255,255,0.05)]">
-                        <button id="btn-ui-dark" class="flex-1 py-2.5 rounded-lg tab-active text-xs font-bold transition-all">Gelap</button>
-                        <button id="btn-ui-light" class="flex-1 py-2.5 rounded-lg tab-inactive text-xs font-bold transition-all">Terang</button>
+                        <button id="btn-ui-dark" class="flex-1 py-2.5 rounded-lg tab-active text-xs font-bold transition-all duration-300">Gelap</button>
+                        <button id="btn-ui-light" class="flex-1 py-2.5 rounded-lg tab-inactive text-xs font-bold transition-all duration-300">Terang</button>
                     </div>
 
                     <div class="mb-5">
@@ -184,9 +257,9 @@
                             <span class="text-[10px] font-semibold opacity-70 uppercase block">Warna Aksen UI</span>
                         </div>
                         <div class="flex gap-4 items-center">
-                            <button class="w-8 h-8 rounded-full bg-[#fc4c02] shadow-[0_2px_10px_rgba(252,76,2,0.4)] border-2 border-[var(--app-bg)] focus:outline-none transition-transform hover:scale-110" onclick="window.setThemePreset('#fc4c02')"></button>
-                            <button class="w-8 h-8 rounded-full bg-[#10b981] shadow-[0_2px_10px_rgba(16,185,129,0.4)] border-2 border-[var(--app-bg)] focus:outline-none transition-transform hover:scale-110" onclick="window.setThemePreset('#10b981')"></button>
-                            <button class="w-8 h-8 rounded-full bg-[#3b82f6] shadow-[0_2px_10px_rgba(59,130,246,0.4)] border-2 border-[var(--app-bg)] focus:outline-none transition-transform hover:scale-110" onclick="window.setThemePreset('#3b82f6')"></button>
+                            <button class="w-8 h-8 rounded-full bg-[#fc4c02] shadow-[0_2px_10px_rgba(252,76,2,0.4)] border-2 border-[var(--app-bg)] transition-transform hover:scale-110 active:scale-95" onclick="window.setThemePreset('#fc4c02')"></button>
+                            <button class="w-8 h-8 rounded-full bg-[#10b981] shadow-[0_2px_10px_rgba(16,185,129,0.4)] border-2 border-[var(--app-bg)] transition-transform hover:scale-110 active:scale-95" onclick="window.setThemePreset('#10b981')"></button>
+                            <button class="w-8 h-8 rounded-full bg-[#3b82f6] shadow-[0_2px_10px_rgba(59,130,246,0.4)] border-2 border-[var(--app-bg)] transition-transform hover:scale-110 active:scale-95" onclick="window.setThemePreset('#3b82f6')"></button>
                             <div class="w-8 h-8 rounded-full overflow-hidden relative shadow-sm border border-[rgba(255,255,255,0.3)] transition-transform hover:scale-110 ml-2">
                                 <i data-lucide="plus" class="absolute inset-0 m-auto w-4 h-4 opacity-50 pointer-events-none"></i>
                                 <input type="color" id="theme-accent" value="#fc4c02" class="absolute -top-2 -left-2 w-16 h-16 cursor-pointer opacity-0">
@@ -209,8 +282,8 @@
                         <span class="text-[11px] font-bold uppercase tracking-widest">Gambar Rute (Ekspor)</span>
                     </div>
                     <div class="flex bg-[rgba(150,150,150,0.1)] rounded-xl p-1 border border-[rgba(255,255,255,0.05)]">
-                        <button id="btn-export-light" class="flex-1 py-2.5 rounded-lg tab-active text-xs font-bold transition-all">Mode Putih</button>
-                        <button id="btn-export-dark" class="flex-1 py-2.5 rounded-lg tab-inactive text-xs font-bold transition-all">Mode Hitam</button>
+                        <button id="btn-export-light" class="flex-1 py-2.5 rounded-lg tab-active text-xs font-bold transition-all duration-300">Mode Putih</button>
+                        <button id="btn-export-dark" class="flex-1 py-2.5 rounded-lg tab-inactive text-xs font-bold transition-all duration-300">Mode Hitam</button>
                     </div>
                 </div>
 
@@ -226,14 +299,10 @@
                     <input type="range" id="input-sens" min="1.0" max="6.0" step="0.1" value="2.5" class="w-full custom-slider">
                 </div>
 
-                <button id="btn-install" class="w-full py-4 rounded-[16px] bg-accent text-white font-black text-sm uppercase tracking-widest hidden items-center justify-center gap-2 shadow-lg active:scale-95 transition-transform">
-                    <i data-lucide="layout-grid" class="w-5 h-5"></i> Tambah Ke Layar Utama
-                </button>
-
                 <div>
                     <div class="flex justify-between items-center mb-3 px-1">
                         <span class="text-[11px] font-bold opacity-50 uppercase tracking-widest">Riwayat Tracking</span>
-                        <button id="btn-clear-history" class="text-[9px] font-bold text-red-500 uppercase px-2 py-1.5 rounded-lg bg-red-500/10 active:scale-95 transition-transform border border-red-500/20">Hapus Semua</button>
+                        <button id="btn-clear-history" class="text-[9px] font-bold text-red-500 uppercase px-2 py-1.5 rounded-lg bg-red-500/10 active:scale-90 transition-transform border border-red-500/20">Hapus Semua</button>
                     </div>
                     <div id="history-container" class="space-y-3 max-h-[300px] overflow-y-auto pr-1 pb-4"></div>
                 </div>
@@ -241,8 +310,7 @@
         </div>
     </div>
 
-    <!-- MODAL CONFIRM DELETE -->
-    <div id="modal-confirm-delete" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-[999999] hidden items-center justify-center p-4">
+    <div id="modal-confirm-delete" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-[999999] hidden items-center justify-center p-4 transition-opacity">
         <div class="w-full max-w-sm flex flex-col gap-4 modal-pop bg-[#18181b] border border-white/10 p-6 rounded-[32px] text-center shadow-2xl relative">
             <div class="w-16 h-16 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center mx-auto mb-2 border border-red-500/30">
                 <i data-lucide="alert-triangle" class="w-8 h-8"></i>
@@ -256,12 +324,11 @@
         </div>
     </div>
 
-    <!-- MODAL SUMMARY -->
-    <div id="modal-summary" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-[99999] hidden items-center justify-center p-4">
+    <div id="modal-summary" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-[99999] hidden items-center justify-center p-4 transition-opacity">
         <div class="w-full max-w-sm flex flex-col gap-5 modal-pop" id="summary-content">
             <div class="flex justify-between items-center px-2">
                 <h3 class="text-xl text-white font-black uppercase tracking-wider">Hasil Ekspor</h3>
-                <button id="btn-close-summary" class="p-2 rounded-full bg-white/10 text-white z-50"><i data-lucide="x" class="w-6 h-6"></i></button>
+                <button id="btn-close-summary" class="p-2 rounded-full bg-white/10 text-white z-50 active:scale-90 transition-transform"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             <div class="w-full aspect-[4/5] rounded-[32px] overflow-hidden border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative bg-white">
                 <canvas id="export-canvas" class="w-full h-full object-cover"></canvas>
@@ -273,9 +340,19 @@
     </div>
 
     <script>
+        // --- PROGRESSIVE RENDERING LOGIC ---
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.body.classList.add('app-loaded');
+                setTimeout(() => {
+                    document.getElementById('splash-screen').style.display = 'none';
+                    if (map) map.invalidateSize(); // Prevent Map rendering bugs after display:none transition
+                }, 500);
+            }, 800); // Artificial delay meniru professional app cold-boot
+        });
+
+        // --- CORE ENGINE ---
         const CONFIG = { THRESHOLD: 2.5, COOLDOWN_MS: 350, MIN_ACCURACY: 45 };
-        
-        // INJEKSI VARIABEL RETENSI PACE (bestPaceRaw & bestPaceStr)
         const State = {
             isActive: false, isPaused: false, elapsed: 0, steps: 0, distance: 0,
             gravity: 9.81, lastStepMs: 0, coords: [], watchId: null, timerId: null, deferredPrompt: null,
@@ -293,7 +370,7 @@
             mSet: document.getElementById('modal-settings'), mSum: document.getElementById('modal-summary'),
             btnSet: document.getElementById('btn-settings'), btnCloseSet: document.getElementById('btn-close-settings'), btnCloseSum: document.getElementById('btn-close-summary'), 
             btnDl: document.getElementById('btn-download'), cExp: document.getElementById('export-canvas'), hCont: document.getElementById('history-container'),
-            inpSens: document.getElementById('input-sens'), lblSens: document.getElementById('lbl-sens'), btnInstall: document.getElementById('btn-install'),
+            inpSens: document.getElementById('input-sens'), lblSens: document.getElementById('lbl-sens'),
             
             btnUiDark: document.getElementById('btn-ui-dark'), btnUiLight: document.getElementById('btn-ui-light'),
             btnExpLight: document.getElementById('btn-export-light'), btnExpDark: document.getElementById('btn-export-dark'),
@@ -334,21 +411,21 @@
             if(polyline) polyline.setStyle({ color: accent });
 
             if(isDark) {
-                DOM.btnUiDark.className = "flex-1 py-2.5 rounded-lg tab-active text-xs font-bold transition-all";
-                DOM.btnUiLight.className = "flex-1 py-2.5 rounded-lg tab-inactive text-xs font-bold transition-all";
+                DOM.btnUiDark.className = "flex-1 py-2.5 rounded-lg tab-active text-xs font-bold transition-all duration-300";
+                DOM.btnUiLight.className = "flex-1 py-2.5 rounded-lg tab-inactive text-xs font-bold transition-all duration-300";
             } else {
-                DOM.btnUiLight.className = "flex-1 py-2.5 rounded-lg tab-active text-xs font-bold transition-all";
-                DOM.btnUiDark.className = "flex-1 py-2.5 rounded-lg tab-inactive text-xs font-bold transition-all";
+                DOM.btnUiLight.className = "flex-1 py-2.5 rounded-lg tab-active text-xs font-bold transition-all duration-300";
+                DOM.btnUiDark.className = "flex-1 py-2.5 rounded-lg tab-inactive text-xs font-bold transition-all duration-300";
             }
         }
 
         function applyExportThemeUI(isExportDark) {
             if(!isExportDark) {
-                DOM.btnExpLight.className = "flex-1 py-2.5 rounded-lg tab-active text-xs font-bold transition-all";
-                DOM.btnExpDark.className = "flex-1 py-2.5 rounded-lg tab-inactive text-xs font-bold transition-all";
+                DOM.btnExpLight.className = "flex-1 py-2.5 rounded-lg tab-active text-xs font-bold transition-all duration-300";
+                DOM.btnExpDark.className = "flex-1 py-2.5 rounded-lg tab-inactive text-xs font-bold transition-all duration-300";
             } else {
-                DOM.btnExpDark.className = "flex-1 py-2.5 rounded-lg tab-active text-xs font-bold transition-all";
-                DOM.btnExpLight.className = "flex-1 py-2.5 rounded-lg tab-inactive text-xs font-bold transition-all";
+                DOM.btnExpDark.className = "flex-1 py-2.5 rounded-lg tab-active text-xs font-bold transition-all duration-300";
+                DOM.btnExpLight.className = "flex-1 py-2.5 rounded-lg tab-inactive text-xs font-bold transition-all duration-300";
             }
         }
 
@@ -452,7 +529,6 @@
             return `${m}m ${sec}d`;
         }
 
-        // LOGIKA PACE DIREKAYASA: Rekam & Tahan Pace Tercepat (Paling Laju) saat diam
         function calculatePace() {
             const secSinceLastStep = (Date.now() - State.lastStepMs) / 1000;
             if (secSinceLastStep > 3.0) {
@@ -482,17 +558,14 @@
 
             if (currentActivePaceStr) {
                 DOM.vPace.innerText = currentActivePaceStr;
-                // Cek & Simpan jika ini adalah pace yang paling laju
                 if (currentActivePaceSec < State.bestPaceRaw) {
                     State.bestPaceRaw = currentActivePaceSec;
                     State.bestPaceStr = currentActivePaceStr;
                 }
             } else {
-                // Jika sedang tidak berjalan/berlari, TAHAN UI pada angka Paling Laju yang pernah dicapai
                 if (State.bestPaceStr !== "--:--") {
                     DOM.vPace.innerText = State.bestPaceStr;
                 } else {
-                    // Fallback murni jika belum pernah laju sama sekali
                     if (State.distance < 0.01) { DOM.vPace.innerText = "--:--"; return; }
                     const paceRaw = State.elapsed / State.distance;
                     if (paceRaw > 3599) { DOM.vPace.innerText = "--:--"; return; }
@@ -541,7 +614,7 @@
             }
             localStorage.setItem('STREVA_CACHE', JSON.stringify({
                 el: State.elapsed, st: State.steps, d: State.distance, c: State.coords, p: State.isPaused,
-                bpR: State.bestPaceRaw, bpS: State.bestPaceStr // Simpan state pace paling laju
+                bpR: State.bestPaceRaw, bpS: State.bestPaceStr
             }));
         }
 
@@ -583,7 +656,6 @@
 
         function toggleEngine() {
             if(!State.isActive) {
-                // RESET
                 State.isActive = true; State.isPaused = false; State.steps = 0; State.distance = 0; State.elapsed = 0; 
                 State.coords = []; State.paceBuffer = []; State.bestPaceRaw = Infinity; State.bestPaceStr = "--:--";
                 polyline.setLatLngs([]); 
@@ -625,9 +697,7 @@
             window.removeEventListener('devicemotion', handleMotion, true);
             if(State.watchId) navigator.geolocation.clearWatch(State.watchId);
             
-            // GUNAKAN PACE PALING LAJU (BEST PACE) UNTUK DI EKSPOR SESUAI REQUEST
             const exportedPace = State.bestPaceStr !== "--:--" ? State.bestPaceStr : getFinalAveragePace();
-            
             saveHistoryData(exportedPace);
             
             let paceForExport = exportedPace;
@@ -798,14 +868,24 @@
 
             restoreSession();
 
+            // PWA PENGENDALIAN INSTALASI WIDGET
+            const installBtns = document.querySelectorAll('.btn-install-pwa');
             window.addEventListener('beforeinstallprompt', (e) => { 
-                e.preventDefault(); State.deferredPrompt = e; DOM.btnInstall.classList.replace('hidden', 'flex'); 
+                e.preventDefault(); 
+                State.deferredPrompt = e; 
             });
-            DOM.btnInstall.onclick = async () => {
-                if (!State.deferredPrompt) return; State.deferredPrompt.prompt();
-                const { outcome } = await State.deferredPrompt.userChoice;
-                if (outcome === 'accepted') DOM.btnInstall.classList.replace('flex', 'hidden'); State.deferredPrompt = null;
-            };
+            
+            installBtns.forEach(btn => {
+                btn.onclick = async () => {
+                    if (!State.deferredPrompt) {
+                        alert("PWA sudah terinstal atau perangkat tidak mendukung (Coba gunakan Chrome/Safari lalu pilih 'Add to Home Screen').");
+                        return;
+                    }
+                    State.deferredPrompt.prompt();
+                    const { outcome } = await State.deferredPrompt.userChoice;
+                    if (outcome === 'accepted') State.deferredPrompt = null;
+                };
+            });
 
             if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
         });
